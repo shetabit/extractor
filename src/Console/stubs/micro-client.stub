@@ -1,0 +1,27 @@
+<?php
+
+namespace DummyNamespace;
+
+use Shetabit\Extractor\Abstracts\MicroClientAbstract;
+
+class DummyClass extends MicroClientAbstract
+{
+    public function __construct()
+    {
+        //
+        parent::__construct();
+    }
+
+    /**
+     * Run client
+     *
+     * @return mixed
+     */
+    public function run() {
+        /**
+         * Client can communicate with other remote services like the below
+         *
+         * $this->request->setUri('remote-url.com')->fetch();
+         */
+    }
+}
