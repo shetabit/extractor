@@ -4,6 +4,7 @@ namespace Shetabit\Extractor\Abstracts;
 
 use Shetabit\Extractor\Classes\Request;
 use Shetabit\Extractor\Contracts\MicroClientInterface;
+use Shetabit\Extractor\Contracts\ResponseInterface;
 
 abstract class MicroClientAbstract implements MicroClientInterface
 {
@@ -21,14 +22,12 @@ abstract class MicroClientAbstract implements MicroClientInterface
     public function __construct()
     {
         $this->request = new Request;
-
-        $this->run();
     }
 
     /**
      * Run client
      *
-     * @return void
+     * @return ResponseInterface
      */
-    abstract public function run();
+    abstract public function run() : ResponseInterface;
 }

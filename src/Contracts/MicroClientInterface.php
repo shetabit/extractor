@@ -7,7 +7,7 @@ interface MicroClientInterface
     /**
      * Run client
      *
-     * @return void
+     * @return ResponseInterface
      */
-    public function run();
+    public function run() : ResponseInterface;
 }
