@@ -2,6 +2,7 @@
 
 namespace Shetabit\Extractor\Abstracts;
 
+use GuzzleHttp\Exception\ServerException;
 use Shetabit\Extractor\Classes\Response;
 use Shetabit\Extractor\Contracts\RequestInterface;
 use GuzzleHttp\Client;
@@ -187,7 +188,7 @@ abstract class RequestAbstract implements RequestInterface
             'timeout'  => $this->getTimeout(),
         ]);
 
-        try {
+        try { // if status code is 2xx
 
             $result = $client->request($this->getMethod(), $this->getUri());
 
@@ -205,10 +206,22 @@ abstract class RequestAbstract implements RequestInterface
 
             return $response;
 
-        } catch (\Exception $exception) {
+        } catch (ServerException $exception) { // if status code is not 2xx
 
-            if (is_callable($resolve)) {
-                $reject($exception->getMessage());
+            if (is_callable($reject)) {
+
+                $httpResponse = $exception->getResponse();
+
+                $response = new Response(
+                    $this->getMethod(),
+                    $this->getUri(),
+                    $httpResponse->getHeaders(),
+                    $httpResponse->getBody()->getContents(),
+                    $httpResponse->getStatusCode()
+                );
+
+                $reject($response);
+
             } else {
                 throw $exception;
             }

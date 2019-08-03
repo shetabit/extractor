@@ -74,9 +74,9 @@ abstract class ResponseAbstract implements ResponseInterface
      * Get response's header by its name
      *
      * @param string $name
-     * @return string
+     * @return mixed|string|null
      */
-    public function getHeader(string $name) : string
+    public function getHeader(string $name)
     {
         return $this->headers[$name] ?? null;
     }
