@@ -3,6 +3,7 @@
 namespace Shetabit\Extractor\Abstracts;
 
 use GuzzleHttp\Exception\ServerException;
+use Psr\Http\Message\ResponseInterface;
 use Shetabit\Extractor\Classes\Response;
 use Shetabit\Extractor\Contracts\RequestInterface;
 use GuzzleHttp\Client;
@@ -36,6 +37,27 @@ abstract class RequestAbstract implements RequestInterface
      * @var null
      */
     protected $body = null;
+
+    /**
+     * Used as request's multipart data
+     *
+     * @var array
+     */
+    protected $multipartData = [];
+
+    /**
+     * Used to send request's params similar to forms
+     *
+     * @var array
+     */
+    protected $formParams= [];
+
+    /**
+     * Request's query
+     *
+     * @var array
+     */
+    protected $queries = [];
 
     /**
      * Deadline of each request (seconds)
@@ -171,6 +193,141 @@ abstract class RequestAbstract implements RequestInterface
     }
 
     /**
+     * add form data
+     *
+     * @param $name
+     * @param $value
+     * @param array $headers
+     * @return $this
+     */
+    public function addFormParam($name, $value)
+    {
+        array_push($this->formParams, [$name => $value]);
+
+        return $this;
+    }
+
+    /**
+     * retrieve multipart data
+     *
+     * if name is empty , all data will returned
+     *
+     * @param $name
+     * @return mixed|null
+     */
+    public function getFormParam($name)
+    {
+        return $this->formParams[$name] ?? null;
+    }
+
+    /**
+     * retrieve all form params
+     *
+     * @param $name
+     */
+    public function getFormParams()
+    {
+        return $this->formParams;
+    }
+
+    /**
+     * add form data
+     *
+     * @param $name
+     * @param $value
+     * @param array $headers
+     * @return $this
+     */
+    public function addMultiparData($name, $value, array $headers = [])
+    {
+        $data = [
+            'name' => $name,
+            'contents' => $value,
+            'headers' => $headers
+        ];
+
+        array_push($this->multipartData, $data);
+
+        return $this;
+    }
+
+
+    /**
+     * retrieve multipart data
+     *
+     * if name is empty , all data will returned
+     *
+     * @param $name
+     * @return mixed|null
+     */
+    public function getMultipartData($name = null)
+    {
+        return empty($name) ? $this->multipartData : ($this->multipartData[$name] ?? null);
+    }
+
+    /**
+     * add query
+     *
+     * @param $name
+     * @param $value
+     * @param array $headers
+     * @return $this
+     */
+    public function addQuery($name, $value)
+    {
+        array_push($this->queries, [$name => $value]);
+
+        return $this;
+    }
+
+    /**
+     * retrieve multipart data
+     *
+     * if name is empty , all data will returned
+     *
+     * @param $name
+     * @return mixed|null
+     */
+    public function getQuery($name)
+    {
+        return $this->queries[$name] ?? null;
+    }
+
+    /**
+     * Get request's queries
+     *
+     * @return array
+     */
+    public function getQueries()
+    {
+        return $this->queries;
+    }
+
+    /**
+     * Generate options
+     */
+    protected function getOptions()
+    {
+        $options = [
+            'http_errors' => false,
+            'body' => $this->getBody(),
+            'query' => $this->getQueries(),
+        ];
+
+        /*
+         * we cant use formParams and MultipartData at the same time.
+         * this part selects one of them.
+         */
+        if (!empty($this->getFormParams())) {
+            $options['form_params'] = $this->getFormParams();
+        } else if (!empty($this->getMultipartData())) {
+            $options['multipart'] = $this->getMultipartData();
+        }
+
+        return $options;
+    }
+
+    /**
      * Run and fetch data
      *
      * @param callable|null $resolve
@@ -188,45 +345,27 @@ abstract class RequestAbstract implements RequestInterface
             'timeout'  => $this->getTimeout(),
         ]);
 
-        try { // if status code is 2xx
+        $result = $client->request($this->getMethod(), $this->getUri(), $this->getOptions());
 
-            $result = $client->request($this->getMethod(), $this->getUri());
+        $response = new Response(
+            $this->getMethod(),
+            $this->getUri(),
+            $result->getHeaders(),
+            $result->getBody(),
+            $result->getStatusCode()
+        );
 
-            $response = new Response(
-                $this->getMethod(),
-                $this->getUri(),
-                $result->getHeaders(),
-                $result->getBody(),
-                $result->getStatusCode()
-            );
-
+        if ($response->getStatusCode() == 200) { // handle 200 OK response
             if (is_callable($resolve)) {
                 $resolve($response);
             }
-
-            return $response;
-
-        } catch (ServerException $exception) { // if status code is not 2xx
-
-            if (is_callable($reject)) {
-
-                $httpResponse = $exception->getResponse();
-
-                $response = new Response(
-                    $this->getMethod(),
-                    $this->getUri(),
-                    $httpResponse->getHeaders(),
-                    $httpResponse->getBody()->getContents(),
-                    $httpResponse->getStatusCode()
-                );
-
+        } else {
+            if (is_callable($reject)) { // handle responses has error status
                 $reject($response);
-
-            } else {
-                throw $exception;
             }
-
         }
+
+        return $response;
     }
 
     /**
