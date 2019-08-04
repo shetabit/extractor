@@ -30,4 +30,16 @@ abstract class MicroClientAbstract implements MicroClientInterface
      * @return ResponseInterface
      */
     abstract public function run() : ResponseInterface;
+
+    /**
+     * Access to request methods directly
+     *
+     * @param $name
+     * @param $params
+     * @return mixed
+     */
+    public function __call($name, $params)
+    {
+        return call_user_func_array([$this->request, $name], $params);
+    }
 }
