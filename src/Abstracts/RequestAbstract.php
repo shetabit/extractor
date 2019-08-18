@@ -2,8 +2,6 @@
 
 namespace Shetabit\Extractor\Abstracts;
 
-use GuzzleHttp\Exception\ServerException;
-use Psr\Http\Message\ResponseInterface;
 use Shetabit\Extractor\Classes\Response;
 use Shetabit\Extractor\Contracts\RequestInterface;
 use GuzzleHttp\Client;
@@ -121,7 +119,7 @@ abstract class RequestAbstract implements RequestInterface
      */
     public function addHeader(string $name, string $value)
     {
-        array_push($this->headers, [$name => $value]);
+        $this->headers = array_merge($this->headers, [$name => $value]);
 
         return $this;
     }
@@ -197,12 +195,11 @@ abstract class RequestAbstract implements RequestInterface
      *
      * @param $name
      * @param $value
-     * @param array $headers
      * @return $this
      */
     public function addFormParam($name, $value)
     {
-        array_push($this->formParams, [$name => $value]);
+        $this->formParams = array_merge($this->formParams, [$name => $value]);
 
         return $this;
     }
@@ -223,7 +220,7 @@ abstract class RequestAbstract implements RequestInterface
     /**
      * retrieve all form params
      *
-     * @param $name
+     * @return array
      */
     public function getFormParams()
     {
@@ -275,7 +272,7 @@ abstract class RequestAbstract implements RequestInterface
      */
     public function addQuery($name, $value)
     {
-        array_push($this->queries, [$name => $value]);
+        $this->queries = array_merge($this->queries, [$name => $value]);
 
         return $this;
     }
