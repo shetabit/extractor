@@ -309,6 +309,7 @@ abstract class RequestAbstract implements RequestInterface
             'http_errors' => false,
             'body' => $this->getBody(),
             'query' => $this->getQueries(),
+            'headers' => $this->getHeaders(),
         ];
 
         /*
