@@ -13,7 +13,7 @@ a `micro-client` generator to communicate between `microservices` in Laravel app
 
 - [Install](#install)
 - [How to use](#how-to-use)
-  - [Send Request to remote API](#send-request-to-remote-api)
+  - [Send Request to remote API](#sent-request-to-remote-api)
     - [Available methods](#available-methods)
   - [Micro-clients](#micro-clients)
     - [Create micro-clients](#create-micro-clients)
@@ -98,9 +98,12 @@ the `Request` has more methods to add `fileds`, `headers` and etc.
 - `getQueries()` : get all queries.
 - `fetch(callable $resolve, callable $reject)` : runs the request, if fails , the `reject` will be called, if succeed then resolve will be called.
 - `send(callable $resolve, callable $reject)` : alias of `fetch`.
-#### Create micro-clients
+
+## Micro clients
 
 This package handles **communications** between **micro-services** using **micro-clients**
+
+#### Create micro-clients
 
 micro clients can be generated using commands.
 
