@@ -13,6 +13,8 @@ a `micro-client` generator to communicate between `microservices` in Laravel app
 
 - [Install](#install)
 - [How to use](#how-to-use)
+  - [Send Request to remote API](#send-request-to-remote-api)
+    - [Available methods](#available-methods)
   - [Micro-clients](#micro-clients)
     - [Create micro-clients](#create-micro-clients)
     - [Run a micro-client](#run-a-micro-client)
@@ -23,7 +25,7 @@ a `micro-client` generator to communicate between `microservices` in Laravel app
 - [Credits](#credits)
 - [License](#license)
 
-## install
+## Install
 
 Via Composer
 
@@ -45,9 +47,60 @@ In your `config/app.php` file add below lines.
 
 ## How to use
 
-This package handles **communications** between **micro-services** using **micro-clients**
+#### Sent request to remote API
 
+you can send requests to remote API using `Request` class, see the below example:
+
+```php
+// at the top
+use Shetabit\Extractor\Classes\Request;
+
+//...
+
+// create new request
+$request = new Request();
+
+// set api's url and method
+$request->setUri('http://yoursite.com/api/v1/endpoint')
+		->setMethod('get');
+
+// run the request and get data
+$response = $requet->fetch();
+
+var_dump($response); // show given response
+
+```
+
+as you see, you can work with remote API in an easy way.
+
+the `Request` has more methods to add `fileds`, `headers` and etc.
+
+###### Available methods: 
+
+- `setUri(string $uri)` : set API end point.
+- `getUri()` : retrieve current end point.
+- `setMethod(string $method)` : set method (get, post, patch, put, delete).
+- `getMethod()` : get current method.
+- `addHeader(string $name, string $value)` : set a header.
+- `getHeader(string $name)` : get a header by its name.
+- `getHeaders()` : retrieve all headers.
+- `setTimeout(int $timeout)` : set request timeout (seconds).
+- `getTimeout()` : retrieve timeout (seconds).
+- `setBody(string $body)` : set request body.
+- `getBody()`: retrieve request body.
+- `addFormParam(string $name, string $value)` : add parameters into request similar to html forms.
+- `getFormParam(string $name)` : get a form parameter value by its name.
+- `getFormParams()` : retrieve all current form parameters.
+- `AddMultipartData(string $name, string $value, array $headers)` : add multipart data (multipart/form-data), you can send files using this method.
+- `getMultipartData(string $name)` : get current multipart data using its name.
+- `addQuery(string $name, string $value)` : add query string into current request.
+- `getQuery($name)` : get a query by its name.
+- `getQueries()` : get all queries.
+- `fetch(callable $resolve, callable $reject)` : runs the request, if fails , the `reject` will be called, if succeed then resolve will be called.
+- `send(callable $resolve, callable $reject)` : alias of `fetch`.
 #### Create micro-clients
+
+This package handles **communications** between **micro-services** using **micro-clients**
 
 micro clients can be generated using commands.
 
@@ -57,14 +110,73 @@ php artisan make:micro-client  clientName
 
 micro-clients will saved in `app/Http/MicroClients` by default.
 
-#### Run a micro-client
+lets create and example, imagine you have and remote Api (or microservice) and need to login into it.
 
-you can run the micro-client like the below
+then, your Login micro-client can be similar to below codes:
 
 ```php
-$client = new UploadFileClient();
+namespace App\Http\MicroClients\Auth;
 
-$client->run();
+use Shetabit\Extractor\Abstracts\MicroClientAbstract;
+use Shetabit\Extractor\Contracts\ResponseInterface;
+
+class Login extends MicroClientAbstract
+{
+    protected $mobile;
+    protected $password;
+
+    public function __construct($username, $password = null)
+    {
+        $this->username = $username;
+        $this->password = $password;
+
+        parent::__construct();
+    }
+
+    /**
+     * Get requests' endpoint
+     *
+     * @return string
+     */
+    protected function getEndPoint()
+    {
+        return 'http://yoursite.com/api/v1/auth';
+    }
+
+    /**
+     * Run client
+     *
+     * @return ResponseInterface
+     * @throws \Exception
+     */
+    public function run() : ResponseInterface
+    {
+        $response = $this
+            ->request
+            ->setUri($this->getEndPoint())
+            ->setMethod('post')
+            ->addFormParam('username', $this->username)
+            ->addFormParam('password', $this->password)
+            ->fetch();
+
+         return $response;
+    }
+}
+```
+
+#### Run a micro-client
+
+you can run the `Login` micro-client like the below (we have Login micro-client example at the top)
+
+```php
+// dump data
+$username = 'test';
+$password = 'something';
+
+$client = new Login($username, $password);
+
+// run client and login into remote service (remote api)
+$response = $client->run();
 ```
 
 micro-client starts to work as you call `run` method.
