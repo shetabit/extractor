@@ -28,6 +28,11 @@ class ExtractorServiceProvider extends ServiceProvider
         //
     }
 
+    /**
+     * Load artisan commands
+     *
+     * @return void
+     */
     protected function loadCommands()
     {
         if ($this->app->runningInConsole()) {
