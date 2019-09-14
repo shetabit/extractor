@@ -98,6 +98,8 @@ the `Request` has more methods to add `fileds`, `headers` and etc.
 - `getQueries()` : get all queries.
 - `fetch(callable $resolve, callable $reject)` : runs the request, if fails , the `reject` will be called, if succeed then resolve will be called.
 - `send(callable $resolve, callable $reject)` : alias of `fetch`.
+- `fetchAsync(callable $resolve, callable $reject)` : runs the request async, if fails , the `reject` will be called, if succeed then resolve will be called.
+- `sendAsync(callable $resolve, callable $reject)` : alias of `fetchAsync`.
 
 ## Micro clients
 
