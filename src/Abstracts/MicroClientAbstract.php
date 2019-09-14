@@ -27,9 +27,9 @@ abstract class MicroClientAbstract implements MicroClientInterface
     /**
      * Run client
      *
-     * @return ResponseInterface
+     * @return ResponseInterface|null
      */
-    abstract public function run() : ResponseInterface;
+    abstract public function run() : ?ResponseInterface;
 
     /**
      * Access to request methods directly

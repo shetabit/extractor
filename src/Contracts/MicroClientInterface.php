@@ -9,5 +9,5 @@ interface MicroClientInterface
      *
      * @return ResponseInterface
      */
-    public function run() : ResponseInterface;
+    public function run() : ?ResponseInterface;
 }

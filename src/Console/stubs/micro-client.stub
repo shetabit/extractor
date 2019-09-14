@@ -5,7 +5,6 @@ namespace DummyNamespace;
 use Shetabit\Extractor\Abstracts\MicroClientAbstract;
 use Shetabit\Extractor\Contracts\ResponseInterface;
 
-
 class DummyClass extends MicroClientAbstract
 {
     public function __construct()
@@ -17,13 +16,17 @@ class DummyClass extends MicroClientAbstract
     /**
      * Run client
      *
-     * @return ResponseInterface
+     * @return ResponseInterface|null
      */
-    public function run() : ResponseInterface {
+    public function run() : ?ResponseInterface {
         /**
          * Client can communicate with other remote services like the below
          *
-         * $response = $this->request->setUri('remote-url.com')->fetch();
+         * Run async request
+         * $this->request->setUri('remote-url.com')->fetchAsync(); // returns null
+         *
+         * Run sync request
+         * $response = $this->request->setUri('remote-url.com')->fetch(); // returns ResponseInterface
          *
          * return $response;
          */

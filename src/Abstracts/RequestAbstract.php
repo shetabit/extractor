@@ -378,4 +378,57 @@ abstract class RequestAbstract implements RequestInterface
     {
         return  $this->fetch($resolve, $reject);
     }
+
+    /**
+     * Run and fetch data asynchronously
+     *
+     * @param callable|null $resolve
+     * @param callable|null $reject
+     */
+    public function fetchAsync(callable $resolve = null, callable $reject = null)
+    {
+        $client = new Client([
+            // Base URI is used with relative requests
+            'base_uri' => $this->uri,
+
+            // You can set any number of default request options.
+            'timeout'  => $this->getTimeout(),
+        ]);
+
+        $promise = $client->requestAsync($this->getMethod(), $this->getUri(), $this->getOptions());
+
+        $promise->then(
+            function ($result) use ($resolve, $reject) {
+                $response = new Response(
+                    $this->getMethod(),
+                    $this->getUri(),
+                    $result->getHeaders(),
+                    $result->getBody(),
+                    $result->getStatusCode()
+                );
+
+                if ($response->getStatusCode() == 200) { // handle 200 OK response
+                    if (is_callable($resolve)) {
+                        $resolve($response);
+                    }
+                } else {
+                    if (is_callable($reject)) { // handle responses has error status
+                        $reject($response);
+                    }
+                }
+            }
+        );
+    }
+
+    /**
+     * An alias for fetchAsync
+     *
+     * @param callable|null $resolve
+     * @param callable|null $reject
+     * @throws \Exception
+     */
+    public function sendAsync(callable $resolve = null, callable $reject = null)
+    {
+        $this->fetch($resolve, $reject);
+    }
 }
