@@ -65,6 +65,21 @@ abstract class RequestAbstract implements RequestInterface
     protected $timeout = 10.0; // 10 seconds
 
     /**
+     * Describes the SSL certificate verification behavior of a request.
+     *
+     * @var boolean|string
+     */
+    protected $verify = true;
+
+    /**
+     * String to specify an HTTP proxy, or an array to specify
+     * different proxies for different protocols.
+     *
+     * @var string|array
+     */
+    protected $proxy = null;
+
+    /**
      * Set request's uri (endpoint)
      *
      * @param string $url
@@ -140,7 +155,8 @@ abstract class RequestAbstract implements RequestInterface
      *
      * @return array
      */
-    public function getHeaders() : array {
+    public function getHeaders() : array
+    {
         return $this->headers;
     }
 
@@ -301,6 +317,47 @@ abstract class RequestAbstract implements RequestInterface
     }
 
     /**
+     * Set a proxy
+     *
+     * @param mixed $proxy
+     * @return $this
+     */
+    public function setProxy($proxy)
+    {
+        $this->proxy = $proxy;
+
+        return $this;
+    }
+
+    /**
+    * Retrieve the current proxy
+    *
+    * @return mixed|null
+    */
+    public function getProxy()
+    {
+        return $this->proxy;
+    }
+
+    /**
+     * Describes the SSL certificate verification behavior of a request.
+     *
+     * @param mixed $verify
+     * @return $this
+     */
+    public function setVerify($verify)
+    {
+        $this->verify = $verify;
+
+        return $this;
+    }
+
+    public function getVerify()
+    {
+        return $this->verify;
+    }
+
+    /**
      * Generate options
      */
     protected function getOptions()
@@ -310,7 +367,12 @@ abstract class RequestAbstract implements RequestInterface
             'body' => $this->getBody(),
             'query' => $this->getQueries(),
             'headers' => $this->getHeaders(),
+            'verify' => $this->getVerify(),
         ];
+
+        if ($proxy = $this->getProxy()) {
+            $options['proxy'] = $proxy;
+        }
 
         /*
          * we cant use formParams and MultipartData at the same time.
@@ -318,7 +380,7 @@ abstract class RequestAbstract implements RequestInterface
          */
         if (!empty($this->getFormParams())) {
             $options['form_params'] = $this->getFormParams();
-        } else if (!empty($this->getMultipartData())) {
+        } elseif (!empty($this->getMultipartData())) {
             $options['multipart'] = $this->getMultipartData();
         }
 
