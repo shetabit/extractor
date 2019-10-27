@@ -11,7 +11,7 @@ trait HasParsedUri
      *
      * @return array
      */
-    function getParsedUri()
+    public function getParsedUri()
     {
         return $this->parseURL($this->getUri());
     }

@@ -1,9 +1,6 @@
-
 <p align="center">
     <img src="resources/images/microservices-communication.png?raw=true">
 </p>
-
-
 
 # Laravel Extractor
 
@@ -65,7 +62,7 @@ $request->setUri('http://yoursite.com/api/v1/endpoint')
 		->setMethod('get');
 
 // run the request and get data
-$response = $requet->fetch();
+$response = $request->fetch();
 
 var_dump($response); // show given response
 
@@ -75,7 +72,7 @@ as you see, you can work with remote API in an easy way.
 
 the `Request` has more methods to add `fileds`, `headers` and etc.
 
-###### Available methods: 
+###### Available methods:
 
 - `setUri(string $uri)` : set API end point.
 - `getUri()` : retrieve current end point.
@@ -86,7 +83,11 @@ the `Request` has more methods to add `fileds`, `headers` and etc.
 - `getHeaders()` : retrieve all headers.
 - `setTimeout(int $timeout)` : set request timeout (seconds).
 - `getTimeout()` : retrieve timeout (seconds).
+- `setProxy(string|array $proxy)` : proxy the request.
+- `getProxy()` : retrieve proxy.
 - `setBody(string $body)` : set request body.
+- `getVerify()` : retrieve the SSL certificate verification behavior of a request.
+- `setVerify(boolean|string $verify)` : set SSL certificate verification.
 - `getBody()`: retrieve request body.
 - `addFormParam(string $name, string $value)` : add parameters into request similar to html forms.
 - `getFormParam(string $name)` : get a form parameter value by its name.
