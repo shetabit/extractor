@@ -25,14 +25,14 @@
     ],
     "require": {
         "php": ">=7.2",
-        "illuminate/broadcasting": "~5.8",
-        "illuminate/support": "~5.8",
-        "guzzlehttp/guzzle": "^6.3"
+        "illuminate/broadcasting": ">=5.8",
+        "illuminate/support": ">=5.8",
+        "guzzlehttp/guzzle": "^6.4"
     },
     "require-dev": {
-        "orchestra/testbench": "~3.1",
-        "phpunit/phpunit": "^8.2",
-        "squizlabs/php_codesniffer": "^3.4"
+        "orchestra/testbench": ">=4.3",
+        "phpunit/phpunit": "^8.4",
+        "squizlabs/php_codesniffer": "^3.5"
     },
     "autoload": {
         "psr-4": {
