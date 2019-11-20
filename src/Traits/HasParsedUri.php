@@ -15,4 +15,17 @@ trait HasParsedUri
     {
         return $this->parseURL($this->getUri());
     }
+
+    /**
+     * Parse query string
+     *
+     * @return array
+     */
+    public function getParsedQueryString()
+    {
+        $parsedUri = $this->getParsedUri();
+        $queryString = $parsedUri['query'];
+
+        return $this->parseQueryString($queryString);
+    }
 }
