@@ -89,6 +89,26 @@ abstract class RequestAbstract implements RequestInterface
     {
         $this->uri = trim($url);
 
+        $this->addUriQueries($this->uri);
+
+        return $this;
+    }
+
+    /**
+     * Add uri's query string into query.
+     *
+     * @return $this|mixed
+    */
+    protected function addUriQueries($uri)
+    {
+        $queries = $this->getParsedQueryString($uri);
+
+        if (is_array($queries)) {
+            foreach ($queries as $name => $value) {
+                $this->addQuery($name, $value);
+            }
+        }
+
         return $this;
     }
 
