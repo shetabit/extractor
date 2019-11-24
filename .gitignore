@@ -1,5 +1,5 @@
 /vendor/
 composer.lock
 
-#ignore phpstorm cache files
+# ignore phpstorm cache files
 .idea
