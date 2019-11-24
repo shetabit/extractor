@@ -36,6 +36,7 @@ abstract class MicroClientAbstract implements MicroClientInterface
      *
      * @param $name
      * @param $params
+     *
      * @return mixed
      */
     public function __call($name, $params)

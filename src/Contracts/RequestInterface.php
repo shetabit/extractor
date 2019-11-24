@@ -2,14 +2,13 @@
 
 namespace Shetabit\Extractor\Contracts;
 
-use Shetabit\Extractor\Abstracts\ResponseAbstract;
-
 interface RequestInterface
 {
     /**
      * Set request's URI
      *
      * @param string $url
+     *
      * @return mixed
      */
     public function setUri(string $url);
@@ -25,6 +24,7 @@ interface RequestInterface
      * Set request's method (exp: GET, POST, PUT, DELETE, ...)
      *
      * @param string $method
+     *
      * @return mixed
      */
     public function setMethod(string $method);
@@ -41,6 +41,7 @@ interface RequestInterface
      *
      * @param string $name
      * @param string $value
+     *
      * @return mixed
      */
     public function addHeader(string $name, string $value);
@@ -49,6 +50,7 @@ interface RequestInterface
      * Get header by its name
      *
      * @param string $name
+     *
      * @return string
      */
     public function getHeader(string $name) : string;
@@ -64,6 +66,7 @@ interface RequestInterface
      * Set Request's deadline (seconds)
      *
      * @param int $timeout
+     *
      * @return mixed
      */
     public function setTimeout(int $timeout);
@@ -75,27 +78,39 @@ interface RequestInterface
      */
     public function getTimeout() : int;
 
+
+    /**
+     * Follow redirects or not
+     *
+     * @param $allow
+     *
+     * @return mixed
+     */
+    public function allowRedirects(bool $allow = true);
+
     /**
      * Set request's body
      *
      * @param $body
+     *
      * @return mixed
      */
     public function setBody($body); // set request's body
 
     /**
-     * get request's body
+     * Get request's body
      *
-     * @return mixed
+     * @return string|null
      */
-    public function getBody(); // get request's body
+    public function getBody() : ?string; // get request's body
 
     /**
      * Run request and fetch data
      *
      * @param callable|null $resolve
      * @param callable|null $reject
-     * @return ResponseAbstract
+     *
+     * @return ResponseInterface
      */
-    public function fetch(callable $resolve = null, callable $reject = null) : ResponseAbstract;
+    public function fetch(callable $resolve = null, callable $reject = null) : ResponseInterface;
 }

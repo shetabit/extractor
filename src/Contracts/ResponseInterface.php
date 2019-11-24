@@ -22,6 +22,7 @@ interface ResponseInterface
      * Get response's header by its name
      *
      * @param string $name
+     *
      * @return mixed
      */
     public function getHeader(string $name);

@@ -8,6 +8,7 @@ trait HttpURL
      * Parse HTTP url
      *
      * @param string $url
+     *
      * @return array
      */
     public function parseURL(string $url) : array
@@ -19,10 +20,14 @@ trait HttpURL
     * Parse Query string and convert it to an associative array
     *
     * @param string $queryString
+     *
     * @return array
     */
     public function parseQueryString(string $queryString)
     {
-        return parse_str($queryString);
+        $query = [];
+        parse_str($queryString, $query);
+
+        return $query;
     }
 }
