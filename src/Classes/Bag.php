@@ -11,10 +11,29 @@ use Shetabit\Extractor\Contracts\ResponseInterface;
 
 class Bag
 {
+    /**
+     * List of requests
+     *
+     * @var array
+     */
     protected $requests;
 
+    /**
+     * Number of maximum concurrent requests
+     *
+     * @var int|null
+     */
     protected $concurrency = null;
 
+    /**
+     * Add a new request into the bag reserved requests.
+     *
+     * @param null $request
+     * @param callable|null $resolve
+     * @param callable|null $reject
+     *
+     * @return $this
+     */
     public function addRequest($request = null, callable $resolve = null, callable $reject = null)
     {
         $requestInstance = $request;
@@ -32,11 +51,23 @@ class Bag
         return $this;
     }
 
+    /**
+     * Retrieve all requests.
+     *
+     * @return mixed
+     */
     public function getRequests()
     {
         return $this->requests;
     }
 
+    /**
+     * Set max concurrency.
+     * set it to 0 or negate values if you want max concurrency
+     *
+     * @param int $concurrency
+     * @return $this
+     */
     public function setConcurrency(int $concurrency)
     {
         $this->concurrency = $concurrency;
@@ -44,11 +75,22 @@ class Bag
         return $this;
     }
 
+    /**
+     * Retrieve current concurrency.
+     *
+     * @return int
+     */
     public function getConcurrency()
     {
         return (int) $this->concurrency;
     }
 
+    /**
+     * Execute bag requests.
+     *
+     * @param callable $fulfilled
+     * @param callable $rejected
+     */
     public function execute(callable $fulfilled, callable $rejected)
     {
         $concurrency = $this->getConcurrency() > 0 ? $this->getConcurrency() : count($this->requests);
