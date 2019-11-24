@@ -437,11 +437,11 @@ abstract class RequestAbstract implements RequestInterface
 
         if ($response->getStatusCode() == 200) { // handle 200 OK response
             if (is_callable($resolve)) {
-                $resolve($response);
+                $resolve($response, $this);
             }
         } else {
             if (is_callable($reject)) { // handle responses has error status
-                $reject($response);
+                $reject($response, $this);
             }
         }
 
@@ -491,11 +491,11 @@ abstract class RequestAbstract implements RequestInterface
 
                 if ($response->getStatusCode() == 200) { // handle 200 OK response
                     if (is_callable($resolve)) {
-                        $resolve($response);
+                        $resolve($response, $this);
                     }
                 } else {
                     if (is_callable($reject)) { // handle responses has error status
-                        $reject($response);
+                        $reject($response, $this);
                     }
                 }
             }
