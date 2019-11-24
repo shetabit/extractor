@@ -465,6 +465,8 @@ class Request implements RequestInterface
      * @param callable|null $reject
      *
      * @return ResponseInterface
+     *
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function fetch(callable $resolve = null, callable $reject = null) : ResponseInterface
     {
@@ -506,9 +508,21 @@ class Request implements RequestInterface
      * @param callable|null $reject
      *
      * @return ResponseInterface
+     *
+     * @throws \GuzzleHttp\Exception\GuzzleException
      */
     public function send(callable $resolve = null, callable $reject = null)
     {
         return $this->fetch($resolve, $reject);
+    }
+
+    /**
+     * Create concurrent requests.
+     *
+     * @return Bag
+     */
+    public function createBag()
+    {
+        return new Bag();
     }
 }
