@@ -19,14 +19,16 @@ trait HttpURL
     /**
     * Parse Query string and convert it to an associative array
     *
-    * @param string $queryString
-     *
-    * @return array
-    */
-    public function parseQueryString(string $queryString)
+     * @param string|null $queryString
+     * @return array
+     */
+    public function parseQueryString(?string $queryString)
     {
         $query = [];
-        parse_str($queryString, $query);
+
+        if ($query) {
+            parse_str($queryString, $query);
+        }
 
         return $query;
     }

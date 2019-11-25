@@ -24,7 +24,8 @@ trait HasParsedUri
     public function getParsedQueryString()
     {
         $parsedUri = $this->getParsedUri();
-        $queryString = $parsedUri['query'];
+
+        $queryString = $parsedUri['query'] ?? null;
 
         return $this->parseQueryString($queryString);
     }

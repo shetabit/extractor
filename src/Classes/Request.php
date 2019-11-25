@@ -430,8 +430,10 @@ class Request implements RequestInterface
 
     /**
      * Generate options
+     *
+     * @return array
      */
-    protected function getOptions()
+    public function getOptions()
     {
         $options = [
             'http_errors' => false,
