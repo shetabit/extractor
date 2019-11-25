@@ -218,6 +218,31 @@ $responses = $result
     ->execute();
 ```
 
+you can set `success` and `error` listener for each requests seperately. here is another example that uses `onSuccess` and `onError` listeners.
+
+```php
+$response = $result
+    ->createBag()
+    ->addRequest(function (RequestInterface $request) {
+        $request
+            ->setUri('http://google.com/')
+            ->onSuccess(function (ResponseInterface $response, RequestInterface $request) {
+                echo $response->getBody();
+            });
+    })
+    ->addRequest(function (RequestInterface $request) {
+        $request
+            ->setUri('http://yahoo.com/')
+            ->onSuccess(function (ResponseInterface $response, RequestInterface $request) {
+                echo 'success';
+            })
+            ->onError(function (ResponseInterface $response, RequestInterface $request) {
+                echo 'fail';
+            });
+    })
+    ->execute();
+```
+
 ## Change log
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
