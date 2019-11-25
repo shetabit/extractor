@@ -202,9 +202,7 @@ class Bag
 
                 $this->requests[$index]['response'] = $response;
 
-                if (is_callable($reject)) {
-                    $reject($response, $request);
-                }
+                $request->error($response);
                 if (is_callable($reject)) {
                     $reject($response, $request);
                 }
