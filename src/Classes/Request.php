@@ -499,7 +499,7 @@ class Request implements RequestInterface
     {
         if (is_callable($this->onSuccessCallback)) {
             $success = $this->onSuccessCallback;
-            $success($response, $request);
+            $success($response, $this);
         }
 
         return $this;
