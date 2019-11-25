@@ -30,12 +30,10 @@ class Bag
      * Add a new request into the bag reserved requests.
      *
      * @param null $request
-     * @param callable|null $resolve
-     * @param callable|null $reject
      *
      * @return $this
      */
-    public function addRequest($request = null, callable $resolve = null, callable $reject = null)
+    public function addRequest($request = null)
     {
         $requestInstance = $request;
 
@@ -45,8 +43,6 @@ class Bag
 
         $this->requests[] = [
             'request' => $requestInstance,
-            'resolve' => $resolve,
-            'reject' => $reject,
             'response' => null,
         ];
 
@@ -166,8 +162,6 @@ class Bag
             'fulfilled' => function ($result, $index) use ($fulfilled) {
                 // this is delivered each successful response
                 $request = $this->getRequests()[$index]['request'];
-                $resolve = $this->getRequests()[$index]['resolve'];
-                $reject = $this->getRequests()[$index]['reject'];
 
                 $response = new Response(
                     $request->getMethod(),
@@ -180,16 +174,12 @@ class Bag
                 $this->requests[$index]['response'] = $response;
 
                 if ($response->getStatusCode() == 200) { // handle 200 OK response
-                    if (is_callable($resolve)) {
-                        $resolve($response, $request);
-                    }
+                    $request->success($response);
                     if (is_callable($fulfilled)) {
                         $fulfilled($response, $request);
                     }
                 } else { // handle responses has error status
-                    if (is_callable($reject)) {
-                        $reject($response, $request);
-                    }
+                    $request->error($response);
                     if (is_callable($rejected)) {
                         $rejected($response, $request);
                     }

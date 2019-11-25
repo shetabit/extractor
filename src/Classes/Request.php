@@ -90,6 +90,20 @@ class Request implements RequestInterface
     protected $proxy = null;
 
     /**
+     * Success event callback
+     *
+     * @var callable|null
+     */
+    protected $onSuccessCallback = null;
+
+    /**
+     * Error event callback
+     *
+     * @var callable|null
+     */
+    protected $onErrorCallback = null;
+
+    /**
      * Request constructor.
      *
      * @param string $uri
@@ -461,6 +475,67 @@ class Request implements RequestInterface
     }
 
     /**
+     * This event will be invoked when fetch complete successfully.
+     *
+     * @param callable $callback
+     *
+     * @return $this
+     */
+    public function onSuccess(callable $callback)
+    {
+        $this->onSuccessCallback = $callback;
+
+        return $this;
+    }
+
+    /**
+     * Trigger success event
+     *
+     * @param ResponseInterface $response
+     *
+     * @return $this
+     */
+    public function success(ResponseInterface $response)
+    {
+        if (is_callable($this->onSuccessCallback)) {
+            $success = $this->onSuccessCallback;
+            $success($response, $request);
+        }
+
+        return $this;
+    }
+
+    /**
+     * This event will be invoked when fetch fail.
+     *
+     * @param callable $callback
+     * @return $this
+     */
+    public function onError(callable $callback)
+    {
+        $this->onErrorCallback = $callback;
+
+        return $this;
+    }
+
+    /**
+     * Trigger error event
+     *
+     * @param ResponseInterface $response
+     *
+     * @return $this
+     */
+    public function error(ResponseInterface $response)
+    {
+        if (is_callable($this->onErrorCallback)) {
+            $error = $this->onErrorCallback;
+            $error($response, $this);
+        }
+
+        return $this;
+    }
+
+    /**
      * Run and fetch data
      *
      * @param callable|null $resolve
@@ -472,6 +547,14 @@ class Request implements RequestInterface
      */
     public function fetch(callable $resolve = null, callable $reject = null) : ResponseInterface
     {
+        if (is_callable($resolve)) {
+            $this->onSuccess($resolve);
+        }
+
+        if (is_callable($reject)) {
+            $this->onError($reject);
+        }
+
         $client = new Client([
             // Base URI is used with relative requests
             'base_uri' => $this->uri,
@@ -491,12 +574,12 @@ class Request implements RequestInterface
         );
 
         if ($response->getStatusCode() == 200) { // handle 200 OK response
-            if (is_callable($resolve)) {
-                $resolve($response, $this);
+            if (is_callable($this->onSuccess)) {
+                $this->success($response);
             }
         } else {
-            if (is_callable($reject)) { // handle responses has error status
-                $reject($response, $this);
+            if (is_callable($this->onError)) { // handle responses has error status
+                $this->error($response);
             }
         }
 
