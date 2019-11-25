@@ -16,6 +16,7 @@ a `micro-client` generator to communicate between `microservices` in Laravel app
     - [Create micro-clients](#create-micro-clients)
     - [Run a micro-client](#run-a-micro-client)
     - [Send requests](#send-requests)
+    - [Send concurrent requests](#send-concurrent-requests)
 - [Change log](#change-log)
 - [Contributing](#contributing)
 - [Security](#security)
@@ -99,8 +100,7 @@ the `Request` has more methods to add `fileds`, `headers` and etc.
 - `getQueries()` : get all queries.
 - `fetch(callable $resolve, callable $reject)` : runs the request, if fails , the `reject` will be called, if succeed then resolve will be called.
 - `send(callable $resolve, callable $reject)` : alias of `fetch`.
-- `fetchAsync(callable $resolve, callable $reject)` : runs the request async, if fails , the `reject` will be called, if succeed then resolve will be called.
-- `sendAsync(callable $resolve, callable $reject)` : alias of `fetchAsync`.
+- `createBag(callable $resolve, callable $reject)` : creates  a bag (group) of concurrent requests.
 
 ## Micro clients
 
@@ -196,6 +196,27 @@ $this->request->setUri('remote-url.com')->fetch();
 ```
 
 in each micro-client, you have access to `request` object, it can be used to handle communications between micro-services.
+
+#### Send concurrent requests
+
+```php
+use Shetabit\Extractor\Classes\Request;
+use Shetabit\Extractor\Contracts\RequestInterface;
+
+// ...
+
+$result = new Request;
+
+$responses = $result
+    ->createBag()
+    ->addRequest(function(RequestInterface $request) {
+        $request->setUri('http://google.com/');
+    })
+    ->addRequest(function(RequestInterface $request) {
+        $request->setUri('http://bing.com/');
+    })
+    ->execute();
+```
 
 ## Change log
 
