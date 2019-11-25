@@ -215,7 +215,7 @@ $responses = $result
     ->addRequest(function(RequestInterface $request) {
         $request->setUri('http://bing.com/');
     })
-    ->execute();
+    ->fetch();
 ```
 
 you can set `success` and `error` listener for each requests seperately. here is another example that uses `onSuccess` and `onError` listeners.
@@ -240,7 +240,7 @@ $response = $result
                 echo 'fail';
             });
     })
-    ->execute();
+    ->fetch();
 ```
 
 ## Change log
