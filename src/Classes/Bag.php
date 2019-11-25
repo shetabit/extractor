@@ -86,13 +86,15 @@ class Bag
     /**
      * Execute bag requests.
      *
-     * @param callable $fulfilled
-     * @param callable $rejected
+     * @param callable|null $resolve
+     * @param callable|null $reject
+     *
+     * @return array
      */
-    public function execute(callable $fulfilled = null, callable $rejected = null) : array
+    public function fetch(callable $resolve = null, callable $reject = null) : array
     {
         $client = new Client;
-        $pool = new Pool($client, $this->prepareRequestPromises($client), $this->preparePoolConfigs($fulfilled, $rejected));
+        $pool = new Pool($client, $this->prepareRequestPromises($client), $this->preparePoolConfigs($resolve, $reject));
 
         // Initiate the transfers and create a promise
         $promise = $pool->promise();
@@ -148,18 +150,18 @@ class Bag
     /**
      * Prepare configs
      *
-     * @param callable|null $fulfilled
-     * @param callable|null $rejected
+     * @param callable|null $resolve
+     * @param callable|null $reject
      *
      * @return array
      */
-    protected function preparePoolConfigs(callable $fulfilled = null, callable $rejected = null)
+    protected function preparePoolConfigs(callable $resolve = null, callable $reject = null)
     {
         $concurrency = $this->getConcurrency() > 0 ? $this->getConcurrency() : count($this->requests);
 
         return [
             'concurrency' => $concurrency,
-            'fulfilled' => function ($result, $index) use ($fulfilled) {
+            'fulfilled' => function ($result, $index) use ($resolve, $reject) {
                 // this is delivered each successful response
                 $request = $this->getRequests()[$index]['request'];
 
@@ -175,17 +177,17 @@ class Bag
 
                 if ($response->getStatusCode() == 200) { // handle 200 OK response
                     $request->success($response);
-                    if (is_callable($fulfilled)) {
-                        $fulfilled($response, $request);
+                    if (is_callable($resolve)) {
+                        $resolve($response, $request);
                     }
                 } else { // handle responses has error status
                     $request->error($response);
-                    if (is_callable($rejected)) {
-                        $rejected($response, $request);
+                    if (is_callable($reject)) {
+                        $reject($response, $request);
                     }
                 }
             },
-            'rejected' => function ($result, $index) use ($rejected) {
+            'rejected' => function ($result, $index) use ($reject) {
                 // this is delivered each failed request
                 $request = $this->getRequests()[$index]['request'];
                 $resolve = $this->getRequests()[$index]['resolve'];
@@ -203,8 +205,8 @@ class Bag
                 if (is_callable($reject)) {
                     $reject($response, $request);
                 }
-                if (is_callable($rejected)) {
-                    $rejected($response, $request);
+                if (is_callable($reject)) {
+                    $reject($response, $request);
                 }
             },
         ];
