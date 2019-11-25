@@ -25,12 +25,12 @@
     ],
     "require": {
         "php": ">=7.2",
-        "illuminate/broadcasting": ">=5.8",
-        "illuminate/support": ">=5.8",
-        "guzzlehttp/guzzle": "^6.4"
+        "illuminate/broadcasting": ">=5.8 <7.0",
+        "illuminate/support": ">=5.8 <7.0",
+        "guzzlehttp/guzzle": ">=6.2"
     },
     "require-dev": {
-        "orchestra/testbench": ">=4.3",
+        "orchestra/testbench": ">=4.3 <5.0",
         "phpunit/phpunit": "^8.4",
         "squizlabs/php_codesniffer": "^3.5"
     },
