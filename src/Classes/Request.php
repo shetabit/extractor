@@ -574,11 +574,11 @@ class Request implements RequestInterface
         );
 
         if ($response->getStatusCode() == 200) { // handle 200 OK response
-            if (is_callable($this->onSuccess)) {
+            if (is_callable($this->onSuccessCallback)) {
                 $this->success($response);
             }
         } else {
-            if (is_callable($this->onError)) { // handle responses has error status
+            if (is_callable($this->onErrorCallback)) { // handle responses has error status
                 $this->error($response);
             }
         }
