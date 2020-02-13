@@ -4,12 +4,14 @@ namespace Shetabit\Extractor\Classes;
 
 use Shetabit\Extractor\Contracts\RequestInterface;
 use Shetabit\Extractor\Contracts\ResponseInterface;
+use Shetabit\Extractor\Traits\Conditional;
 use Shetabit\Extractor\Traits\HasParsedUri;
 use GuzzleHttp\Client;
 
 class Request implements RequestInterface
 {
     use HasParsedUri;
+    use Conditional;
 
     /**
      * Request's EndPoint

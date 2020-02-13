@@ -245,7 +245,6 @@ $response = $result
 
 ## On progress features
 
-- conditional parameters
 - response cache layer
 - response placeholder
 - add middlewares
