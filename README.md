@@ -243,6 +243,11 @@ $response = $result
     ->fetch();
 ```
 
+## On progress features
+
+- conditional parameters
+- response cache layer
+
 ## Change log
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
