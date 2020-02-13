@@ -248,6 +248,7 @@ $response = $result
 - conditional parameters
 - response cache layer
 - response placeholder
+- add middlewares
 - internal error exceptions
 
 ## Change log
