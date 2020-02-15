@@ -7,6 +7,7 @@ use Shetabit\Extractor\Contracts\ResponseInterface;
 use Shetabit\Extractor\Traits\Conditional;
 use Shetabit\Extractor\Traits\HasParsedUri;
 use GuzzleHttp\Client;
+use Shetabit\Extractor\Contracts\MiddlewareInterface;
 
 class Request implements RequestInterface
 {
@@ -104,6 +105,13 @@ class Request implements RequestInterface
      * @var callable|null
      */
     protected $onErrorCallback = null;
+
+    /**
+     * Middlewares
+     *
+     * @var array
+     */
+    protected $middlewares = [];
 
     /**
      * Request constructor.
@@ -614,5 +622,23 @@ class Request implements RequestInterface
     public function createBag()
     {
         return new Bag();
+    }
+
+    /**
+     * Add middlewares
+     *
+     * @return $this
+     */
+    public function middleware(...$middlewares)
+    {
+        $this->middlewares = [];
+
+        foreach($middlewares as $middleware) {
+            if ($middleware instanceof MiddlewareInterface) {
+                array_push($this->middlewares, $middleware);
+            }
+        }
+
+        return $this;        
     }
 }
