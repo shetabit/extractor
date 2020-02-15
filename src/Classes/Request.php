@@ -123,6 +123,7 @@ class Request implements RequestInterface
      * Set request's uri (endpoint)
      *
      * @param string $url
+     *
      * @return $this|mixed
      */
     public function setUri(string $url)
@@ -166,6 +167,7 @@ class Request implements RequestInterface
      * Get request's method (example: GET, POST, PUT, PATCH)
      *
      * @param string $method
+     *
      * @return $this
      */
     public function setMethod(string $method)
@@ -511,6 +513,7 @@ class Request implements RequestInterface
      * This event will be invoked when fetch fail.
      *
      * @param callable $callback
+     *
      * @return $this
      */
     public function onError(callable $callback)
@@ -604,7 +607,7 @@ class Request implements RequestInterface
     }
 
     /**
-     * Create concurrent requests.
+     * Create concurrent requests (factory method).
      *
      * @return Bag
      */
