@@ -1,0 +1,23 @@
+<?php
+
+namespace DummyNamespace;
+
+use Closure;
+use Shetabit\Extractor\Contracts\MiddlewareInterface;
+use Shetabit\Extractor\Contracts\RequestInterface;
+use Shetabit\Extractor\Contracts\ResponseInterface;
+
+class DummyClass extends MiddlewareInterface
+{
+    /**
+     * Handle request and return suitable response
+     *
+     * @return ResponseInterface
+     */
+    public function handle(RequestInterface $request, Closure $next) : ?ResponseInterface
+    {
+        //
+
+        return $next($request);
+    }
+}

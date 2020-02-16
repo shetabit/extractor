@@ -10,6 +10,7 @@ class DummyClass extends MicroClientAbstract
     public function __construct()
     {
         //
+
         parent::__construct();
     }
 
@@ -18,12 +19,10 @@ class DummyClass extends MicroClientAbstract
      *
      * @return ResponseInterface|null
      */
-    public function run() : ?ResponseInterface {
+    public function run() : ?ResponseInterface
+    {
         /**
          * Client can communicate with other remote services like the below
-         *
-         * Run async request
-         * $this->request->setUri('remote-url.com')->fetchAsync(); // returns null
          *
          * Run sync request
          * $response = $this->request->setUri('remote-url.com')->fetch(); // returns ResponseInterface

@@ -568,23 +568,29 @@ class Request implements RequestInterface
             $this->onError($reject);
         }
 
-        $client = new Client([
-            // Base URI is used with relative requests
-            'base_uri' => $this->uri,
+        $next = function() {
+            $client = new Client([
+                // Base URI is used with relative requests
+                'base_uri' => $this->uri,
+    
+                // You can set any number of default request options.
+                'timeout'  => $this->getTimeout(),
+            ]);
 
-            // You can set any number of default request options.
-            'timeout'  => $this->getTimeout(),
-        ]);
+            $result = $client->request($this->getMethod(), $this->getUri(), $this->getOptions());
 
-        $result = $client->request($this->getMethod(), $this->getUri(), $this->getOptions());
+            $response = new Response(
+                $this->getMethod(),
+                $this->getUri(),
+                $result->getHeaders(),
+                $result->getBody(),
+                $result->getStatusCode()
+            );
 
-        $response = new Response(
-            $this->getMethod(),
-            $this->getUri(),
-            $result->getHeaders(),
-            $result->getBody(),
-            $result->getStatusCode()
-        );
+            return $response;
+        };
+
+        $response = $this->createMiddlewaresChain()->init($this, $next);
 
         if ($response->getStatusCode() == 200) { // handle 200 OK response
             if (is_callable($this->onSuccessCallback)) {
@@ -627,18 +633,30 @@ class Request implements RequestInterface
     /**
      * Add middlewares
      *
+     * @param MiddlewareInterface $middleware
+     *
      * @return $this
      */
-    public function middleware(...$middlewares)
+    public function middleware(MiddlewareInterface $middleware)
     {
-        $this->middlewares = [];
+        array_push($this->middlewares, $middleware);
 
-        foreach($middlewares as $middleware) {
-            if ($middleware instanceof MiddlewareInterface) {
-                array_push($this->middlewares, $middleware);
-            }
+        return $this;
+    }
+
+    /**
+     * Retrieve a chain of middlewares
+     *
+     * @return MiddlewareInterface
+     */
+    protected function createMiddlewaresChain()  : ?MiddlewareInterface
+    {
+        $chain = new Middleware;
+
+        foreach ($this->middlewares as $index => $middleware) {
+            $chain->linkWith(new $middleware);
         }
 
-        return $this;        
+        return $chain;
     }
 }

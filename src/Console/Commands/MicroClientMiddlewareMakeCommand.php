@@ -4,28 +4,28 @@ namespace Shetabit\Extractor\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
 
-class MicroClientMakeCommand extends GeneratorCommand
+class MicroClientMiddlewareMakeCommand extends GeneratorCommand
 {
     /**
      * The console command name.
      *
      * @var string
      */
-    protected $name = 'make:micro-client';
+    protected $name = 'make:micro-client-middleware';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create a new micro-client class';
+    protected $description = 'Create a new micro-client-middleware class';
 
     /**
      * The type of class being generated.
      *
      * @var string
      */
-    protected $type = 'MicroClient';
+    protected $type = 'MicroClientMiddleware';
 
     /**
      * Get the stub file for the generator.
@@ -34,7 +34,7 @@ class MicroClientMakeCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return base_path('vendor/shetabit/extractor/src/Console/stubs/micro-client.stub');
+        return base_path('vendor/shetabit/extractor/src/Console/stubs/micro-client-middleware.stub');
     }
 
     /**
@@ -46,6 +46,6 @@ class MicroClientMakeCommand extends GeneratorCommand
      */
     protected function getDefaultNamespace($rootNamespace)
     {
-        return $rootNamespace.'\Http\MicroClients';
+        return $rootNamespace.'\Http\MicroClients\Middlewares';
     }
 }
