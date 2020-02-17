@@ -3,11 +3,11 @@
 namespace DummyNamespace;
 
 use Closure;
-use Shetabit\Extractor\Contracts\MiddlewareInterface;
+use Shetabit\Extractor\Abstracts\MiddlewareAbstract;
 use Shetabit\Extractor\Contracts\RequestInterface;
 use Shetabit\Extractor\Contracts\ResponseInterface;
 
-class DummyClass extends MiddlewareInterface
+class DummyClass extends MiddlewareAbstract
 {
     /**
      * Handle request and return suitable response

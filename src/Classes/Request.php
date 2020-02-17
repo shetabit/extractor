@@ -652,9 +652,17 @@ class Request implements RequestInterface
     protected function createMiddlewaresChain()  : ?MiddlewareInterface
     {
         $chain = new Middleware;
+        $middlewares = $this->middlewares;
 
-        foreach ($this->middlewares as $index => $middleware) {
-            $chain->linkWith(new $middleware);
+        $latest = null;
+        foreach ($middlewares as $middleware) {
+            if (is_null($latest)) {
+                $chain->linkWith($middleware);
+            } else {
+                $latest->linkWith($middleware);
+            }
+
+            $latest = $middleware;
         }
 
         return $chain;
