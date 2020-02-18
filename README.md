@@ -140,6 +140,22 @@ public function handle($request, Closure $next)
 }
 ```
 
+you can use Request::withGlobalMiddlewares to add global middlewares.
+global middlewares will be binded to all requests.
+
+```php
+
+// in your AppServiceProvider
+
+protected boot()
+{
+    Request::withGlobalMiddlewares([
+        // list of middlewares
+    ]);
+}
+
+```
+
 ##### Cache
 
 you can cache responses according to requests.

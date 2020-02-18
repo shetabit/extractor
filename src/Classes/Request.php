@@ -7,14 +7,13 @@ use Shetabit\Extractor\Contracts\ResponseInterface;
 use Shetabit\Extractor\Traits\Conditional;
 use Shetabit\Extractor\Traits\HasParsedUri;
 use GuzzleHttp\Client;
-use Shetabit\Extractor\Contracts\MiddlewareInterface;
-use Shetabit\Extractor\Middlewares\CacheMiddleware;
-use Shetabit\Extractor\Middlewares\Middleware;
+use Shetabit\Extractor\Traits\HasMiddleware;
 
 class Request implements RequestInterface
 {
     use HasParsedUri;
     use Conditional;
+    use HasMiddleware;
 
     /**
      * Request's EndPoint
@@ -107,13 +106,6 @@ class Request implements RequestInterface
      * @var callable|null
      */
     protected $onErrorCallback = null;
-
-    /**
-     * Middlewares
-     *
-     * @var array
-     */
-    protected $middlewares = [];
 
     /**
      * Request constructor.
@@ -630,57 +622,5 @@ class Request implements RequestInterface
     public function createBag()
     {
         return new Bag();
-    }
-
-    /**
-     * Bind cache middleware
-     *
-     * @param $ttl
-     *
-     * @return $this
-     */
-    public function cache($ttl = 10)
-    {
-        $this->middleware(new CacheMiddleware($ttl));
-
-        return $this;
-    }
-
-    /**
-     * Add middlewares
-     *
-     * @param MiddlewareInterface $middleware
-     *
-     * @return $this
-     */
-    public function middleware(MiddlewareInterface $middleware)
-    {
-        array_push($this->middlewares, $middleware);
-
-        return $this;
-    }
-
-    /**
-     * Retrieve a chain of middlewares
-     *
-     * @return MiddlewareInterface
-     */
-    protected function createMiddlewaresChain()  : ?MiddlewareInterface
-    {
-        $chain = new Middleware;
-        $middlewares = $this->middlewares;
-
-        $latest = null;
-        foreach ($middlewares as $middleware) {
-            if (is_null($latest)) {
-                $chain->linkWith($middleware);
-            } else {
-                $latest->linkWith($middleware);
-            }
-
-            $latest = $middleware;
-        }
-
-        return $chain;
     }
 }
