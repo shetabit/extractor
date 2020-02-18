@@ -91,9 +91,4 @@ class Cache extends MiddlewareAbstract
     {
         return sha1(serialize($request));
     }
-
-    public function __invoke($params)
-    {
-        return new static(...$params);
-    }
 }
