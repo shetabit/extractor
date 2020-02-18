@@ -11,7 +11,10 @@ a `micro-client` generator to communicate between `microservices` in Laravel app
 - [Install](#install)
 - [How to use](#how-to-use)
   - [Send Request to remote API](#sent-request-to-remote-api)
-    - [Available methods](#available-methods)
+    - [Middlewares](#middlewares)
+    - [Cache](#cache)
+    - [Conditional configs](#conditional-configs)
+    - [Request available methods](#request-available-methods)
   - [Micro-clients](#micro-clients)
     - [Create micro-clients](#create-micro-clients)
     - [Run a micro-client](#run-a-micro-client)
@@ -73,7 +76,126 @@ as you see, you can work with remote API in an easy way.
 
 the `Request` has more methods to add `fileds`, `headers` and etc.
 
-###### Available methods:
+##### Middlewares
+
+<p align="center">
+    <img src="resources/images/middlewares-chain.png?raw=true">
+</p>
+
+you can manipulate and substitute Requests and responses using middlewares.
+
+middlewares can be created by running the below command
+
+```shell
+php artisan make:micro-client-middleware test
+```
+
+the former command will create a middleware named `test` in `app\Http\MicroClients\Middlewares` path.
+
+middlewares can be used like the below:
+
+```php
+$request
+    ->setUri('http://your-site.com')
+    ->setMethod('get')
+    ->middleware(new AuthMiddleware)
+    ->fetch();
+```
+
+multiple middlewares can be used by calling `middleware` method multiple times:
+
+```php
+$request
+    ->setUri('http://your-site.com')
+    ->setMethod('get')
+    ->middleware(new Test1)
+    ->middleware(new Test2)
+    ->fetch();
+```
+
+each middleware has a `handle` method that can be used to handle requests and responses.
+
+the following middleware would perform some task before the request is handled by the application:
+
+```php
+public function handle($request, Closure $next) {
+    if($user->name == 'john') {
+        $request->addQuery('name', 'john');
+    }
+
+    return $next($request);
+}
+```
+
+However, this middleware would perform its task after the request is handled by the application:
+
+```php
+public function handle($request, Closure $next)
+{
+    $response = $next($request);
+
+    // Perform action
+
+    return $response;
+}
+```
+
+##### Cache
+
+you can cache responses according to requests.
+
+```php
+// at the top
+use Shetabit\Extractor\Classes\Request;
+
+$url = 'http://google.com/';
+$ttl = 5; // 5 seconds
+
+$response = (new Request)->setUri($url)->cache($ttl)->fetch();
+```
+
+**Notice:** `TTL` (Time To Live) is the same as `Laravel` cache.
+
+```php
+// at the top
+use Shetabit\Extractor\Classes\Request;
+
+$url = 'http://google.com/';
+$ttl = now()->addMinutes(10); // 10 minutes
+
+$response = (new Request)->setUri($url)->cache($ttl)->fetch();
+```
+
+##### Conditional configs
+
+sometimes you need to add some configs when a condition happens.
+you can use `when` method to add conditional configs
+
+```php
+$request
+    ->when('condition1', function($request) {
+        $request
+            ->setUri('http://your-site.com')
+            ->setMethod('get')
+            ->middleware(new AuthMiddleware);
+    })
+    ->when('condition2', function($request) {
+        $request
+            ->setUri('http://shop-site.com')
+            ->setMethod('get');
+    })
+    ->whenNot('condition3', function($request) {
+        $request
+            ->setUri('http://shop-site.com')
+            ->setMethod('patch')
+            ->when('condition4', function($request) {
+                $request->setMethod('delete'); // sets method to delete
+            });
+    })
+    ->fetch();
+```
+
+##### Request available methods:
 
 - `setUri(string $uri)` : set API end point.
 - `getUri()` : retrieve current end point.
@@ -101,6 +223,8 @@ the `Request` has more methods to add `fileds`, `headers` and etc.
 - `fetch(callable $resolve, callable $reject)` : runs the request, if fails , the `reject` will be called, if succeed then resolve will be called.
 - `send(callable $resolve, callable $reject)` : alias of `fetch`.
 - `createBag(callable $resolve, callable $reject)` : creates  a bag (group) of concurrent requests.
+- `cache` : store responses in cache
+- `middleware` : add middlewares
 
 ## Micro clients
 
