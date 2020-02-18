@@ -8,7 +8,7 @@ use Shetabit\Extractor\Traits\Conditional;
 use Shetabit\Extractor\Traits\HasParsedUri;
 use GuzzleHttp\Client;
 use Shetabit\Extractor\Contracts\MiddlewareInterface;
-use Shetabit\Extractor\Middlewares\Cache;
+use Shetabit\Extractor\Middlewares\CacheMiddleware;
 use Shetabit\Extractor\Middlewares\Middleware;
 
 class Request implements RequestInterface
@@ -639,9 +639,9 @@ class Request implements RequestInterface
      *
      * @return $this
      */
-    public function cache($ttl)
+    public function cache($ttl = 10)
     {
-        $this->middleware(new Cache($ttl));
+        $this->middleware(new CacheMiddleware($ttl));
 
         return $this;
     }
