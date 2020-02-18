@@ -1,6 +1,6 @@
 <?php
 
-namespace Shetabit\Extractor\Classes;
+namespace Shetabit\Extractor\Middlewares;
 
 use Closure;
 use Shetabit\Extractor\Abstracts\MiddlewareAbstract;

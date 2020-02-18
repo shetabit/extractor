@@ -245,9 +245,6 @@ $response = $result
 
 ## On progress features
 
-- response cache layer
-- response placeholder
-- add middlewares
 - internal error exceptions
 
 ## Change log

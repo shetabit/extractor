@@ -8,6 +8,7 @@ use Shetabit\Extractor\Traits\Conditional;
 use Shetabit\Extractor\Traits\HasParsedUri;
 use GuzzleHttp\Client;
 use Shetabit\Extractor\Contracts\MiddlewareInterface;
+use Shetabit\Extractor\Middlewares\Middleware;
 
 class Request implements RequestInterface
 {
