@@ -44,6 +44,15 @@ class Response implements ResponseInterface
      */
     protected $statusCode;
 
+    /**
+     * Response constructor.
+     *
+     * @param string $method
+     * @param string $uri
+     * @param array $headers
+     * @param string $body
+     * @param int $statusCode
+     */
     public function __construct(string $method, string $uri, array $headers, string $body, int $statusCode)
     {
         $this->method= $method;
