@@ -562,20 +562,20 @@ class Request implements RequestInterface
             $this->onError($reject);
         }
 
-        $next = function() {
+        $next = function($request) {
             $client = new Client([
                 // Base URI is used with relative requests
-                'base_uri' => $this->uri,
+                'base_uri' => $request->uri,
     
                 // You can set any number of default request options.
-                'timeout'  => $this->getTimeout(),
+                'timeout'  => $request->getTimeout(),
             ]);
 
-            $result = $client->request($this->getMethod(), $this->getUri(), $this->getOptions());
+            $result = $client->request($request->getMethod(), $request->getUri(), $request->getOptions());
 
             $response = new Response(
-                $this->getMethod(),
-                $this->getUri(),
+                $request->getMethod(),
+                $request->getUri(),
                 $result->getHeaders(),
                 $result->getBody(),
                 $result->getStatusCode()
@@ -584,7 +584,7 @@ class Request implements RequestInterface
             return $response;
         };
 
-        $response = $this->createMiddlewaresChain()->init($this, $next);
+        $response = $this->invokeMiddlewares($this, $next);
 
         if ($response->getStatusCode() == 200) { // handle 200 OK response
             if (is_callable($this->onSuccessCallback)) {

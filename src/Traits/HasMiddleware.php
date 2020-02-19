@@ -2,7 +2,9 @@
 
 namespace Shetabit\Extractor\Traits;
 
+use Closure;
 use Shetabit\Extractor\Contracts\MiddlewareInterface;
+use Shetabit\Extractor\Contracts\ResponseInterface;
 use Shetabit\Extractor\Middlewares\CacheMiddleware;
 use Shetabit\Extractor\Middlewares\Middleware;
 
@@ -91,28 +93,27 @@ trait HasMiddleware
     /**
      * Retrieve a chain of middlewares
      *
-     * @return MiddlewareInterface
+     * @return null|ResponseInterface
      */
-    protected function createMiddlewaresChain()  : ?MiddlewareInterface
+    protected function invokeMiddlewares($request, $callback)  : ?ResponseInterface
     {
-        $chain = new Middleware;
-
         $middlewares = array_diff(
             array_merge(static::$globalMiddlewares, $this->middlewares),
             $this->bannedMiddlewares
         );
 
-        $latest = null;
-        foreach ($middlewares as $middleware) {
-            if (is_null($latest)) {
-                $chain->linkWith($middleware);
-            } else {
-                $latest->linkWith($middleware);
-            }
+        $middlewares = array_reverse($middlewares);
 
-            $latest = $middleware;
+        $next = function ($request) use ($callback) {
+            return $callback($request);
+        };
+
+        foreach ($middlewares as $middleware) {
+            $next = function ($request) use ($middleware, $next) {
+                return $middleware->handle($request, $next);
+            };
         }
 
-        return $chain;
+        return $next($request);
     }
 }
