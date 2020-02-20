@@ -4,20 +4,27 @@
 
 # Laravel Extractor
 
-a `micro-client` generator to communicate between `microservices` in Laravel applications.
+Communicate with **remote servers** or **microservices** in an easy way.
+
+All requests and responses can be **cached** and **manipulated** on runtime using **middlewares**.
+
+[Donate me](https://yekpay.me/mahdikhanzadi) if you like this package :sunglasses: :bowtie:
 
 ## List of contents
 
 - [Install](#install)
 - [How to use](#how-to-use)
-  - [Send Request to remote API](#sent-request-to-remote-api)
-    - [Middlewares](#middlewares)
-    - [Cache](#cache)
-    - [Conditional configs](#conditional-configs)
-    - [Request available methods](#request-available-methods)
-  - [Micro-clients](#micro-clients)
-    - [Create micro-clients](#create-micro-clients)
-    - [Run a micro-client](#run-a-micro-client)
+  - [Send requests](#send-requests)
+  - [Send concurrent requests](#send-concurrent-requests)
+  - [Event listeners](#event-listeners)
+  - [Middlewares](#middlewares)
+  	- [How to create](#how-to-create)
+  	- [Global middlewares](#global-middlewares)
+  - [Cache](#cache)
+  - [Conditional configs](#conditional-configs)
+  - [Clients](#Clients)
+    - [Create clients](#create-clients)
+    - [Run a client](#run-a-client)
     - [Send requests](#send-requests)
     - [Send concurrent requests](#send-concurrent-requests)
 - [Change log](#change-log)
@@ -43,12 +50,12 @@ In your `config/app.php` file add below lines.
 'providers' => [
 	...
 	Shetabit\Extractor\Providers\ExtractorServiceProvider::class,
-],
+]
 ```
 
 ## How to use
 
-#### Sent request to remote API
+#### Send requests
 
 you can send requests to remote API using `Request` class, see the below example:
 
@@ -62,37 +69,147 @@ use Shetabit\Extractor\Classes\Request;
 $request = new Request();
 
 // set api's url and method
-$request->setUri('http://yoursite.com/api/v1/endpoint')
-		->setMethod('get');
+$request->setUri($url)->setMethod('get');
 
 // run the request and get data
 $response = $request->fetch();
 
 var_dump($response); // show given response
-
 ```
 
 as you see, you can work with remote API in an easy way.
 
-the `Request` has more methods to add `fileds`, `headers` and etc.
+the `Request` has more methods to add `fields`, `headers` and etc.
 
-##### Middlewares
+```php
+use Shetabit\Extractor\Classes\Request;
+
+//...
+$request = new Request();
+
+
+# Example 1:
+$request
+	->setUri('http://your-site.com')
+	->setMethod('post')
+	// add some headers
+	->addHeader('Authorization', "Bearer dfaerfaeaeva1351adsfaecva")
+	->addHeader('Accept', 'application/json')
+	// add form parameters
+	->addFormParam('email', $email)
+    ->addFormParam('password', $password);
+
+$response = $request->fetch(); // run request
+
+
+# Example 2:
+$request
+	->setUri('http://your-site.com')
+	->setMethod('get')
+	// add query string
+	->addQuery('page', $page)
+	->addQuery('s', $search);
+
+$response = $request->fetch(); // run request
+```
+
+#### Send concurrent requests
+
+you can send concurrent requests like the below
+
+```php
+use Shetabit\Extractor\Classes\Request;
+use Shetabit\Extractor\Contracts\RequestInterface;
+
+// ...
+
+$request = new Request;
+
+$responses = $request
+    ->createBag()
+    ->addRequest(function(RequestInterface $request) {
+        $request->setUri('http://google.com/');
+    })
+    ->addRequest(function(RequestInterface $request) {
+        $request->setUri('http://bing.com/');
+    })
+    ->fetch();
+```
+
+#### Event listeners
+
+you can set `success` and `error` listener for each requests seperately. here is another example that uses `onSuccess` and `onError` listeners.
+
+```php
+use Shetabit\Extractor\Classes\Request;
+use Shetabit\Extractor\Contracts\RequestInterface;
+
+// ...
+
+$request = new Request;
+
+# Example 1: using on success
+$response = $request
+	->setUri('http://google.com/')
+	->onSuccess(function (ResponseInterface $response, RequestInterface $request) {
+		echo $response->getBody();
+	})
+	->fetch();
+
+
+# Example 2: using on error
+$response = $request
+	->setUri('http://yahoo.com/')
+    ->onSuccess(function (ResponseInterface $response, RequestInterface $request) {
+                echo 'success';
+            })
+            ->onError(function (ResponseInterface $response, RequestInterface $request) {
+                echo 'fail';
+            });
+
+
+# Example 3: using request's bag
+$response = $request
+    ->createBag()
+    ->addRequest(function (RequestInterface $request) {
+        $request
+            ->setUri('http://google.com/')
+            ->onSuccess(function (ResponseInterface $response, RequestInterface $request) {
+                echo $response->getBody();
+            });
+    })
+    ->addRequest(function (RequestInterface $request) {
+        $request
+            ->setUri('http://yahoo.com/')
+            ->onSuccess(function (ResponseInterface $response, RequestInterface $request) {
+                echo 'success';
+            })
+            ->onError(function (ResponseInterface $response, RequestInterface $request) {
+                echo 'fail';
+            });
+    })
+    ->fetch();
+```
+
+#### Middlewares
 
 <p align="center">
     <img src="resources/images/middlewares-chain.png?raw=true">
 </p>
 
-you can manipulate and substitute Requests and responses using middlewares.
 
-middlewares can be created by running the below command
+
+###### How to create
+
+Middlewares can be created by running the below command
 
 ```shell
-php artisan make:micro-client-middleware test
+php artisan make:extractor-middleware test
 ```
 
-the former command will create a middleware named `test` in `app\Http\MicroClients\Middlewares` path.
+The former command will create a middleware named `test` in `app\Http\RemoteRequests\Middlewares` path.
 
-middlewares can be used like the below:
+You can add a middleware to request like the below:
 
 ```php
 $request
@@ -102,7 +219,7 @@ $request
     ->fetch();
 ```
 
-multiple middlewares can be used by calling `middleware` method multiple times:
+Multiple middlewares can be used by calling `middleware` method multiple times:
 
 ```php
 $request
@@ -113,9 +230,9 @@ $request
     ->fetch();
 ```
 
-each middleware has a `handle` method that can be used to handle requests and responses.
+Each middleware has a `handle` method that can be used to handle requests and responses.
 
-the following middleware would perform some task before the request is handled by the application:
+The following middleware would perform some task before the request is handled by the application:
 
 ```php
 public function handle($request, Closure $next) {
@@ -127,7 +244,7 @@ public function handle($request, Closure $next) {
 }
 ```
 
-However, this middleware would perform its task after the request is handled by the application:
+However,  this middleware would perform its task after the request is handled by the application:
 
 ```php
 public function handle($request, Closure $next)
@@ -140,7 +257,9 @@ public function handle($request, Closure $next)
 }
 ```
 
-you can use Request::withGlobalMiddlewares to add global middlewares.
+###### Global middlewares
+
+You can use `Request::withGlobalMiddlewares` to add global middlewares.
 global middlewares will be binded to all requests.
 
 ```php
@@ -155,6 +274,21 @@ protected boot()
 }
 
 ```
+
+in each request, you can unbind global middlewares, if you need them just use `withoutMiddleware` like the below:
+
+```php
+// at the top
+use Shetabit\Extractor\Classes\Request;
+
+$url = 'http://google.com/';
+
+$response = (new Request)
+	->setUri($url)
+	->withoutMiddleware(new TestMiddleware)
+	->fetch();
+```
+
 
 ##### Cache
 
@@ -182,12 +316,23 @@ $ttl = now()->addMinutes(10); // 10 minutes
 $response = (new Request)->setUri($url)->cache($ttl)->fetch();
 ```
 
-##### Conditional configs
+#### Conditional configs
 
-sometimes you need to add some configs when a condition happens.
-you can use `when` method to add conditional configs
+Sometimes you need to add some configs when a condition happens, in this kind of situations you can use the `when` method to add conditional configs.
 
 ```php
+# Example 1: simple
+
+$request
+    ->when('condition1', function($request) {
+        $request
+            ->setUri('http://your-site.com')
+            ->setMethod('get')
+            ->middleware(new AuthMiddleware);
+    });
+
+
+// Example 2: nested
 $request
     ->when('condition1', function($request) {
         $request
@@ -211,57 +356,26 @@ $request
     ->fetch();
 ```
 
-##### Request available methods:
+#### Client
 
-- `setUri(string $uri)` : set API end point.
-- `getUri()` : retrieve current end point.
-- `setMethod(string $method)` : set method (get, post, patch, put, delete).
-- `getMethod()` : get current method.
-- `addHeader(string $name, string $value)` : set a header.
-- `getHeader(string $name)` : get a header by its name.
-- `getHeaders()` : retrieve all headers.
-- `setTimeout(int $timeout)` : set request timeout (seconds).
-- `getTimeout()` : retrieve timeout (seconds).
-- `setProxy(string|array $proxy)` : proxy the request.
-- `getProxy()` : retrieve proxy.
-- `setBody(string $body)` : set request body.
-- `getVerify()` : retrieve the SSL certificate verification behavior of a request.
-- `setVerify(boolean|string $verify)` : set SSL certificate verification.
-- `getBody()`: retrieve request body.
-- `addFormParam(string $name, string $value)` : add parameters into request similar to html forms.
-- `getFormParam(string $name)` : get a form parameter value by its name.
-- `getFormParams()` : retrieve all current form parameters.
-- `AddMultipartData(string $name, string $value, array $headers)` : add multipart data (multipart/form-data), you can send files using this method.
-- `getMultipartData(string $name)` : get current multipart data using its name.
-- `addQuery(string $name, string $value)` : add query string into current request.
-- `getQuery($name)` : get a query by its name.
-- `getQueries()` : get all queries.
-- `fetch(callable $resolve, callable $reject)` : runs the request, if fails , the `reject` will be called, if succeed then resolve will be called.
-- `send(callable $resolve, callable $reject)` : alias of `fetch`.
-- `createBag(callable $resolve, callable $reject)` : creates  a bag (group) of concurrent requests.
-- `cache` : store responses in cache
-- `middleware` : add middlewares
+You can encapsulate any request that exists between the **current microservice** and the **remote microservice** within a `Client`.
 
-## Micro clients
+#### Create clients
 
-This package handles **communications** between **micro-services** using **micro-clients**
-
-#### Create micro-clients
-
-micro clients can be generated using commands.
+Clients can be created using a simple command
 
 ```bash
-php artisan make:micro-client  clientName
+php artisan make:extractor-client  clientName
 ```
 
-micro-clients will saved in `app/Http/MicroClients` by default.
+Clients will saved in `app/Http/RemoteRequests/Clients` by default.
 
 lets create and example, imagine you have and remote Api (or microservice) and need to login into it.
 
 then, your Login micro-client can be similar to below codes:
 
 ```php
-namespace App\Http\MicroClients\Auth;
+namespace App\Http\RemoteRequests\Clients\Auth;
 
 use Shetabit\Extractor\Abstracts\MicroClientAbstract;
 use Shetabit\Extractor\Contracts\ResponseInterface;
@@ -310,9 +424,9 @@ class Login extends MicroClientAbstract
 }
 ```
 
-#### Run a micro-client
+#### Run a client
 
-you can run the `Login` micro-client like the below (we have Login micro-client example at the top)
+you can run the `Login` micro-client like the below (we have Login client example at the top)
 
 ```php
 // dump data
@@ -323,65 +437,12 @@ $client = new Login($username, $password);
 
 // run client and login into remote service (remote api)
 $response = $client->run();
+
+// dump show response's body
+var_dump($response->getBody());
 ```
 
-micro-client starts to work as you call `run` method.
-
-#### Send requests
-
-use the `run` method to handle micro-client
-
-```php
-$this->request->setUri('remote-url.com')->fetch();
-```
-
-in each micro-client, you have access to `request` object, it can be used to handle communications between micro-services.
-
-#### Send concurrent requests
-
-```php
-use Shetabit\Extractor\Classes\Request;
-use Shetabit\Extractor\Contracts\RequestInterface;
-
-// ...
-
-$result = new Request;
-
-$responses = $result
-    ->createBag()
-    ->addRequest(function(RequestInterface $request) {
-        $request->setUri('http://google.com/');
-    })
-    ->addRequest(function(RequestInterface $request) {
-        $request->setUri('http://bing.com/');
-    })
-    ->fetch();
-```
-
-you can set `success` and `error` listener for each requests seperately. here is another example that uses `onSuccess` and `onError` listeners.
-
-```php
-$response = $result
-    ->createBag()
-    ->addRequest(function (RequestInterface $request) {
-        $request
-            ->setUri('http://google.com/')
-            ->onSuccess(function (ResponseInterface $response, RequestInterface $request) {
-                echo $response->getBody();
-            });
-    })
-    ->addRequest(function (RequestInterface $request) {
-        $request
-            ->setUri('http://yahoo.com/')
-            ->onSuccess(function (ResponseInterface $response, RequestInterface $request) {
-                echo 'success';
-            })
-            ->onError(function (ResponseInterface $response, RequestInterface $request) {
-                echo 'fail';
-            });
-    })
-    ->fetch();
-```
+as you see, client starts to work as you call the `run` method, fetches and returns a response.
 
 ## On progress features
 
