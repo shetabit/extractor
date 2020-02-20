@@ -199,7 +199,7 @@ $response = $request
 
 
 
-###### How to create
+##### How to create
 
 Middlewares can be created by running the below command
 
@@ -257,7 +257,7 @@ public function handle($request, Closure $next)
 }
 ```
 
-###### Global middlewares
+##### Global middlewares
 
 You can use `Request::withGlobalMiddlewares` to add global middlewares.
 global middlewares will be binded to all requests.
