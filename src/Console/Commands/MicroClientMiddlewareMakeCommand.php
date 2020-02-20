@@ -11,21 +11,21 @@ class MicroClientMiddlewareMakeCommand extends GeneratorCommand
      *
      * @var string
      */
-    protected $name = 'make:micro-client-middleware';
+    protected $name = 'make:extractor-middleware';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create a new micro-client-middleware class';
+    protected $description = 'Create a new extractor-middleware class';
 
     /**
      * The type of class being generated.
      *
      * @var string
      */
-    protected $type = 'MicroClientMiddleware';
+    protected $type = 'Middleware';
 
     /**
      * Get the stub file for the generator.
@@ -34,7 +34,7 @@ class MicroClientMiddlewareMakeCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return base_path('vendor/shetabit/extractor/src/Console/stubs/micro-client-middleware.stub');
+        return base_path('vendor/shetabit/extractor/src/Console/stubs/middleware.stub');
     }
 
     /**
@@ -46,6 +46,6 @@ class MicroClientMiddlewareMakeCommand extends GeneratorCommand
      */
     protected function getDefaultNamespace($rootNamespace)
     {
-        return $rootNamespace.'\Http\MicroClients\Middlewares';
+        return $rootNamespace.'\Http\RemoteRequests\Middlewares';
     }
 }

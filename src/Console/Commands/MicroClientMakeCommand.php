@@ -11,14 +11,14 @@ class MicroClientMakeCommand extends GeneratorCommand
      *
      * @var string
      */
-    protected $name = 'make:micro-client';
+    protected $name = 'make:extractor-client';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Create a new micro-client class';
+    protected $description = 'Create a new extractor-client';
 
     /**
      * The type of class being generated.
@@ -34,7 +34,7 @@ class MicroClientMakeCommand extends GeneratorCommand
      */
     protected function getStub()
     {
-        return base_path('vendor/shetabit/extractor/src/Console/stubs/micro-client.stub');
+        return base_path('vendor/shetabit/extractor/src/Console/stubs/client.stub');
     }
 
     /**
@@ -46,6 +46,6 @@ class MicroClientMakeCommand extends GeneratorCommand
      */
     protected function getDefaultNamespace($rootNamespace)
     {
-        return $rootNamespace.'\Http\MicroClients';
+        return $rootNamespace.'\Http\RemoteRequests\Clients';
     }
 }
