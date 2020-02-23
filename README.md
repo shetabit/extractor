@@ -447,6 +447,7 @@ as you see, client starts to work as you call the `run` method, fetches and retu
 ## On progress features
 
 - internal error exceptions
+- resource and API resource clients
 
 ## Change log
 
