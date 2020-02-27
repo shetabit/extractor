@@ -448,6 +448,7 @@ as you see, client starts to work as you call the `run` method, fetches and retu
 
 - internal error exceptions
 - resource and API resource clients
+- proxy requests to another server (middleware)
 
 ## Change log
 
