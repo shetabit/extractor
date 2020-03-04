@@ -25,8 +25,8 @@
     ],
     "require": {
         "php": ">=7.2",
-        "illuminate/broadcasting": ">=5.8 <7.0",
-        "illuminate/support": ">=5.8 <7.0",
+        "illuminate/broadcasting": "5.8.*|6.*|7.*",
+        "illuminate/support": "5.8.*|6.*|7.*",
         "guzzlehttp/guzzle": ">=6.2"
     },
     "require-dev": {
