@@ -18,4 +18,9 @@ abstract class MiddlewareAbstract implements MiddlewareInterface
      * @return ResponseInterface
      */
     abstract public function handle(RequestInterface $request, Closure $next) : ?ResponseInterface;
+
+    public function __toString()
+    {
+        return serialize($this);
+    }    
 }
