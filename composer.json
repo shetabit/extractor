@@ -25,9 +25,9 @@
     ],
     "require": {
         "php": ">=7.2",
-        "illuminate/broadcasting": "5.8.*|6.*|7.*",
-        "illuminate/support": "5.8.*|6.*|7.*",
-        "guzzlehttp/guzzle": ">=6.2"
+        "illuminate/broadcasting": "5.8.*|6.*|7.*|8.*|9.*|10.*",
+        "illuminate/support": "5.8.*|6.*|7.*|8.*|9.*|10.*",
+        "guzzlehttp/guzzle": "6.2.*|7.*"
     },
     "require-dev": {
         "orchestra/testbench": ">=4.3 <5.0",
