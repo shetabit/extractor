@@ -7,26 +7,25 @@ trait HttpURL
     /**
      * Parse HTTP url
      *
-     * @param string $url
-     *
-     * @return array
+     * @return array<string, int|string>
      */
     public function parseURL(string $url) : array
     {
-        return (array) parse_url($url);
+        $parsed = parse_url($url);
+
+        return is_array($parsed) ? $parsed : [];
     }
 
     /**
-    * Parse Query string and convert it to an associative array
-    *
-     * @param string|null $queryString
-     * @return array
+     * Parse Query string and convert it to an associative array
+     *
+     * @return array<array-key, mixed>
      */
-    public function parseQueryString(?string $queryString)
+    public function parseQueryString(string|null $queryString) : array
     {
         $query = [];
 
-        if ($query) {
+        if ($queryString !== null && $queryString !== '') {
             parse_str($queryString, $query);
         }
 

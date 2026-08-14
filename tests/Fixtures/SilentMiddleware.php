@@ -1,23 +1,19 @@
 <?php
 
-namespace {{ namespace }};
+namespace Shetabit\Extractor\Tests\Fixtures;
 
 use Closure;
 use Shetabit\Extractor\Abstracts\MiddlewareAbstract;
 use Shetabit\Extractor\Contracts\RequestInterface;
 use Shetabit\Extractor\Contracts\ResponseInterface;
 
-class {{ class }} extends MiddlewareAbstract
+/**
+ * A middleware that answers with nothing at all, which the contract allows.
+ */
+class SilentMiddleware extends MiddlewareAbstract
 {
-    /**
-     * Handle request and return suitable response
-     *
-     * @param Closure(RequestInterface): (ResponseInterface|null) $next
-     */
     public function handle(RequestInterface $request, Closure $next) : ResponseInterface|null
     {
-        //
-
-        return $next($request);
+        return null;
     }
 }

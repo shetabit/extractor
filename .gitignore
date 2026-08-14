@@ -1,5 +1,18 @@
+# Editors
+.idea
+.vscode
+
+# Vendor directory
 /vendor/
+
+# Composer.lock file
 composer.lock
 
-# ignore phpstorm cache files
-.idea
+# Tool caches and reports
+.phpunit.cache
+.phpunit.result.cache
+coverage.xml
+
+# Local overrides of the tool configurations
+phpcs.xml
+phpstan.neon

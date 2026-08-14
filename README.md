@@ -4,9 +4,19 @@
 
 # Laravel Extractor
 
+[![Software License][ico-license]](LICENSE.md)
+[![Latest Version on Packagist][ico-version]][link-packagist]
+[![Total Downloads on Packagist][ico-download]][link-packagist]
+[![Tests][ico-tests]][link-tests]
+[![Code Style][ico-code-style]][link-code-style]
+[![Static Analysis][ico-static-analysis]][link-static-analysis]
+[![Code Coverage][ico-coverage]][link-coverage]
+
 Communicate with **remote servers** or **microservices** in an easy way.
 
 All requests and responses can be **cached** and **manipulated** on runtime using **middlewares**.
+
+This package requires `PHP 8.4+` and supports `Laravel 12+`.
 
 [Donate me](https://yekpay.me/mahdikhanzadi) if you like this package :sunglasses: :bowtie:
 
@@ -27,6 +37,7 @@ All requests and responses can be **cached** and **manipulated** on runtime usin
     - [Run a client](#run-a-client)
     - [Send requests](#send-requests)
     - [Send concurrent requests](#send-concurrent-requests)
+- [Testing](#testing)
 - [Change log](#change-log)
 - [Contributing](#contributing)
 - [Security](#security)
@@ -41,17 +52,8 @@ Via Composer
 $ composer require shetabit/extractor
 ```
 
-If you are using `Laravel 5.5` or higher then you don't need to add the provider and alias.
-
-In your `config/app.php` file add below lines.
-
-```php
-# In your providers array.
-'providers' => [
-	...
-	Shetabit\Extractor\Providers\ExtractorServiceProvider::class,
-]
-```
+The service provider is registered by Laravel's package discovery, so there is nothing to add to `config/app.php`
+(or to `bootstrap/providers.php`).
 
 ## How to use
 
@@ -235,8 +237,9 @@ Each middleware has a `handle` method that can be used to handle requests and re
 The following middleware would perform some task before the request is handled by the application:
 
 ```php
-public function handle($request, Closure $next) {
-    if($user->name == 'john') {
+public function handle(RequestInterface $request, Closure $next) : ?ResponseInterface
+{
+    if ($user->name == 'john') {
         $request->addQuery('name', 'john');
     }
 
@@ -247,7 +250,7 @@ public function handle($request, Closure $next) {
 However,  this middleware would perform its task after the request is handled by the application:
 
 ```php
-public function handle($request, Closure $next)
+public function handle(RequestInterface $request, Closure $next) : ?ResponseInterface
 {
     $response = $next($request);
 
@@ -256,6 +259,9 @@ public function handle($request, Closure $next)
     return $response;
 }
 ```
+
+A middleware can also answer on its own, without letting the request through — return a `ResponseInterface` instead of
+calling `$next`. Answering with `null` ends the request in a `RuntimeException`, since there is no response to hand back.
 
 ##### Global middlewares
 
@@ -450,6 +456,47 @@ as you see, client starts to work as you call the `run` method, fetches and retu
 - resource and API resource clients
 - proxy requests to another server (middleware)
 
+## Testing
+
+Every pull request and every push to `master` is checked by [GitHub Actions][link-actions]: the test suite runs on
+PHP 8.4 and 8.5, against Laravel 12 and 13 and against both the lowest and the highest supported dependencies, the
+coding style is checked with PHP_CodeSniffer, the sources are analysed with PHPStan (level 7, with larastan) and the
+code coverage of the test suite is measured and has to stay above 95%.
+
+The suite has two parts: `tests/Unit` covers the classes of the package on their own, and `tests/Feature` sends real
+requests over a real connection to a stub server the suite starts (`tests/Support/StubServer.php`), which answers with
+an echo of the request it received.
+
+You can run the same checks locally. With PHP and Composer installed on your machine:
+
+```bash
+composer install
+
+composer test           # run the test suite
+composer test-coverage  # run the test suite and report code coverage
+composer check-style    # check the coding style
+composer fix-style      # fix the coding style where possible
+composer analyse        # run static analysis
+composer ci             # run all of the checks above
+```
+
+If you would rather not install PHP on your machine, the shipped `Dockerfile` and `Makefile` run everything inside a
+container:
+
+```bash
+make test              # run the test suite
+make coverage          # run the test suite and report code coverage
+make check-style       # check the coding style
+make fix-style         # fix the coding style where possible
+make analyse           # run static analysis
+make ci                # run all of the checks above
+make shell             # open a shell inside the container
+make help              # list every available target
+```
+
+Another PHP version can be used with `make test PHP_VERSION=8.5`, and a single Laravel version with
+`make test-laravel LARAVEL=12`.
+
 ## Change log
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
@@ -475,3 +522,18 @@ The MIT License (MIT). Please see [License File](LICENSE.md) for more informatio
 [link-code-quality]: https://scrutinizer-ci.com/g/shetabit/extractor
 [link-author]: https://github.com/khanzadimahdi
 [link-contributors]: ../../contributors
+
+[ico-version]: https://img.shields.io/packagist/v/shetabit/extractor.svg?style=flat-square
+[ico-download]: https://img.shields.io/packagist/dt/shetabit/extractor.svg?color=%23F18&style=flat-square
+[ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
+[ico-tests]: https://img.shields.io/github/actions/workflow/status/shetabit/extractor/tests.yml?branch=master&label=Tests&style=flat-square
+[ico-code-style]: https://img.shields.io/github/actions/workflow/status/shetabit/extractor/code-style.yml?branch=master&label=Code%20Style&style=flat-square
+[ico-static-analysis]: https://img.shields.io/github/actions/workflow/status/shetabit/extractor/static-analysis.yml?branch=master&label=Static%20Analysis&style=flat-square
+[ico-coverage]: https://img.shields.io/codecov/c/github/shetabit/extractor/master?label=Coverage&style=flat-square
+
+[link-packagist]: https://packagist.org/packages/shetabit/extractor
+[link-actions]: https://github.com/shetabit/extractor/actions
+[link-tests]: https://github.com/shetabit/extractor/actions/workflows/tests.yml
+[link-code-style]: https://github.com/shetabit/extractor/actions/workflows/code-style.yml
+[link-static-analysis]: https://github.com/shetabit/extractor/actions/workflows/static-analysis.yml
+[link-coverage]: https://codecov.io/gh/shetabit/extractor

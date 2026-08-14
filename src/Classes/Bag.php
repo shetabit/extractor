@@ -2,47 +2,38 @@
 
 namespace Shetabit\Extractor\Classes;
 
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\Pool;
+use Generator;
 use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Pool;
+use Psr\Http\Message\ResponseInterface as PsrResponseInterface;
 use Shetabit\Extractor\Classes\Request as BaseRequest;
 use Shetabit\Extractor\Contracts\RequestInterface;
 use Shetabit\Extractor\Contracts\ResponseInterface;
+use Throwable;
 
 class Bag
 {
     /**
      * List of requests
      *
-     * @var array
+     * @var array<int, array{request: RequestInterface, response: ResponseInterface|null}>
      */
-    protected $requests;
+    protected array $requests = [];
 
     /**
      * Number of maximum concurrent requests
-     *
-     * @var int|null
      */
-    protected $concurrency = null;
+    protected int|null $concurrency = null;
 
     /**
      * Add a new request into the bag reserved requests.
      *
-     * @param null $request
-     *
-     * @return $this
+     * @param RequestInterface|(callable(BaseRequest): mixed)|null $request
      */
-    public function addRequest($request = null)
+    public function addRequest(RequestInterface|callable|null $request = null) : static
     {
-        $requestInstance = $request;
-
-        if (! ($request instanceof RequestInterface)) {
-            $requestInstance = $this->createAndPrepareARequest($request);
-        }
-
         $this->requests[] = [
-            'request' => $requestInstance,
+            'request' => $request instanceof RequestInterface ? $request : $this->createAndPrepareARequest($request),
             'response' => null,
         ];
 
@@ -52,9 +43,9 @@ class Bag
     /**
      * Retrieve all requests.
      *
-     * @return mixed
+     * @return array<int, array{request: RequestInterface, response: ResponseInterface|null}>
      */
-    public function getRequests()
+    public function getRequests() : array
     {
         return $this->requests;
     }
@@ -62,11 +53,8 @@ class Bag
     /**
      * Set max concurrency.
      * set it to 0 or negate values if you want max concurrency
-     *
-     * @param int $concurrency
-     * @return $this
      */
-    public function setConcurrency(int $concurrency)
+    public function setConcurrency(int $concurrency) : static
     {
         $this->concurrency = $concurrency;
 
@@ -75,10 +63,8 @@ class Bag
 
     /**
      * Retrieve current concurrency.
-     *
-     * @return int
      */
-    public function getConcurrency()
+    public function getConcurrency() : int
     {
         return (int) $this->concurrency;
     }
@@ -86,61 +72,67 @@ class Bag
     /**
      * Execute bag requests.
      *
-     * @param callable|null $resolve
-     * @param callable|null $reject
+     * @param (callable(ResponseInterface, RequestInterface): mixed)|null $resolve
+     * @param (callable(ResponseInterface, RequestInterface): mixed)|null $reject
      *
-     * @return array
+     * @return array<int, ResponseInterface|null>
      */
-    public function fetch(callable $resolve = null, callable $reject = null) : array
+    public function fetch(callable|null $resolve = null, callable|null $reject = null) : array
     {
-        $client = new Client;
-        $pool = new Pool($client, $this->prepareRequestPromises($client), $this->preparePoolConfigs($resolve, $reject));
+        $client = $this->createClient();
 
-        // Initiate the transfers and create a promise
-        $promise = $pool->promise();
+        $pool = new Pool(
+            $client,
+            $this->prepareRequestPromises($client),
+            $this->preparePoolConfigs($resolve, $reject)
+        );
 
-        // Force the pool of requests to complete.
-        $promise->wait();
+        // Initiate the transfers and create a promise, then force the pool of
+        // requests to complete.
+        $pool->promise()->wait();
 
         return array_column($this->getRequests(), 'response');
     }
 
     /**
+     * The client the requests of this bag are sent with.
+     *
+     * A test — or an application that has to hand its own handler stack over —
+     * can replace it by extending this class.
+     */
+    protected function createClient() : Client
+    {
+        return new Client();
+    }
+
+    /**
      * Prepare requests promise.
      *
-     * @param $client
-     *
-     * @return \Generator
+     * @return Generator<int, callable(): mixed>
      */
-    protected function prepareRequestPromises($client)
+    protected function prepareRequestPromises(Client $client) : Generator
     {
-        foreach ($this->requests as $index => $data) {
+        foreach ($this->requests as $data) {
             $request = $data['request'];
 
-            yield function () use ($client, $request) {
-                $promise = $client->requestAsync(
-                    $request->getMethod(),
-                    $request->getUri(),
-                    $request->getOptions()
-                );
-
-                return $promise;
-            };
+            yield fn (): \GuzzleHttp\Promise\PromiseInterface => $client->requestAsync(
+                $request->getMethod(),
+                $request->getUri(),
+                $request->getOptions()
+            );
         }
     }
 
     /**
      * Create new request and set it configs by running given callback.
      *
-     * @param null $callback
-     *
-     * @return Request
+     * @param (callable(BaseRequest): mixed)|null $callback
      */
-    protected function createAndPrepareARequest($callback = null)
+    protected function createAndPrepareARequest(callable|null $callback = null) : BaseRequest
     {
         $request = new BaseRequest();
 
-        if (is_callable($callback)) {
+        if ($callback !== null) {
             $callback($request);
         }
 
@@ -150,63 +142,74 @@ class Bag
     /**
      * Prepare configs
      *
-     * @param callable|null $resolve
-     * @param callable|null $reject
+     * @param (callable(ResponseInterface, RequestInterface): mixed)|null $resolve
+     * @param (callable(ResponseInterface, RequestInterface): mixed)|null $reject
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    protected function preparePoolConfigs(callable $resolve = null, callable $reject = null)
+    protected function preparePoolConfigs(callable|null $resolve = null, callable|null $reject = null) : array
     {
         $concurrency = $this->getConcurrency() > 0 ? $this->getConcurrency() : count($this->requests);
 
         return [
-            'concurrency' => $concurrency,
-            'fulfilled' => function ($result, $index) use ($resolve, $reject) {
+            'concurrency' => max($concurrency, 1),
+            'fulfilled' => function (PsrResponseInterface $result, int $index) use ($resolve, $reject): void {
                 // this is delivered each successful response
-                $request = $this->getRequests()[$index]['request'];
+                $request = $this->requests[$index]['request'];
 
-                $response = new Response(
+                $response = $this->rememberResponse($index, new Response(
                     $request->getMethod(),
                     $request->getUri(),
                     $result->getHeaders(),
-                    $result->getBody(),
+                    (string) $result->getBody(),
                     $result->getStatusCode()
-                );
+                ));
 
-                $this->requests[$index]['response'] = $response;
-
-                if ($response->getStatusCode() == 200) { // handle 200 OK response
+                if ($response->getStatusCode() === 200) { // handle 200 OK response
                     $request->success($response);
-                    if (is_callable($resolve)) {
+
+                    if ($resolve !== null) {
                         $resolve($response, $request);
                     }
-                } else { // handle responses has error status
-                    $request->error($response);
-                    if (is_callable($reject)) {
-                        $reject($response, $request);
-                    }
+
+                    return;
+                }
+
+                // handle responses has error status
+                $request->error($response);
+
+                if ($reject !== null) {
+                    $reject($response, $request);
                 }
             },
-            'rejected' => function ($result, $index) use ($reject) {
+            'rejected' => function (Throwable $reason, int $index) use ($reject): void {
                 // this is delivered each failed request
-                $request = $this->getRequests()[$index]['request'];
-                $resolve = $this->getRequests()[$index]['resolve'];
-                $reject = $this->getRequests()[$index]['reject'];
-                $response = new Response(
+                $request = $this->requests[$index]['request'];
+
+                $response = $this->rememberResponse($index, new Response(
                     $request->getMethod(),
                     $request->getUri(),
                     [],
-                    '',
+                    $reason->getMessage(),
                     0
-                );
-
-                $this->requests[$index]['response'] = $response;
+                ));
 
                 $request->error($response);
-                if (is_callable($reject)) {
+
+                if ($reject !== null) {
                     $reject($response, $request);
                 }
             },
         ];
+    }
+
+    /**
+     * Keep the response of the request at the given index.
+     */
+    private function rememberResponse(int $index, ResponseInterface $response) : ResponseInterface
+    {
+        $this->requests[$index]['response'] = $response;
+
+        return $response;
     }
 }

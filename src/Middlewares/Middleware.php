@@ -12,12 +12,9 @@ class Middleware extends MiddlewareAbstract
     /**
      * Handle request and return suitable response
      *
-     * @param RequestInterface $request
-     * @param Closure $next
-     *
-     * @return ResponseInterface
+     * @param Closure(RequestInterface): (ResponseInterface|null) $next
      */
-    public function handle(RequestInterface $request, Closure $next) : ?ResponseInterface
+    public function handle(RequestInterface $request, Closure $next) : ResponseInterface|null
     {
         //
 

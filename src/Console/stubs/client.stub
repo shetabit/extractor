@@ -1,11 +1,11 @@
 <?php
 
-namespace DummyNamespace;
+namespace {{ namespace }};
 
 use Shetabit\Extractor\Abstracts\MicroClientAbstract;
 use Shetabit\Extractor\Contracts\ResponseInterface;
 
-class DummyClass extends MicroClientAbstract
+class {{ class }} extends MicroClientAbstract
 {
     public function __construct()
     {
@@ -16,10 +16,8 @@ class DummyClass extends MicroClientAbstract
 
     /**
      * Run client
-     *
-     * @return ResponseInterface|null
      */
-    public function run() : ?ResponseInterface
+    public function run() : ResponseInterface|null
     {
         /**
          * Client can communicate with other remote services like the below
@@ -29,5 +27,6 @@ class DummyClass extends MicroClientAbstract
          *
          * return $response;
          */
+        return null;
     }
 }

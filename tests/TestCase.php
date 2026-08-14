@@ -2,19 +2,29 @@
 
 namespace Shetabit\Extractor\Tests;
 
+use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as BaseTestCase;
+use Shetabit\Extractor\Classes\Request;
+use Shetabit\Extractor\Providers\ExtractorServiceProvider;
 
-class TestCase extends BaseTestCase
+abstract class TestCase extends BaseTestCase
 {
-    protected function getPackageProviders($app)
+    /**
+     * Get the package's service providers.
+     *
+     * @param  Application  $app
+     * @return array<int, class-string>
+     */
+    protected function getPackageProviders($app) : array
     {
-        return ['Shetabit\Extractor\Provider\ExtractorServiceProvider'];
+        return [ExtractorServiceProvider::class];
     }
 
-    protected function getPackageAliases($app)
+    protected function tearDown() : void
     {
-        return [
-            'Sms' => 'Shetabit\Extractor\Facade\Extractor',
-        ];
+        // The global middlewares are kept in a static property.
+        Request::withoutGlobalMiddlewares();
+
+        parent::tearDown();
     }
 }

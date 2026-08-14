@@ -6,8 +6,6 @@ interface MicroClientInterface
 {
     /**
      * Run client
-     *
-     * @return ResponseInterface
      */
-    public function run() : ?ResponseInterface;
+    public function run() : ResponseInterface|null;
 }

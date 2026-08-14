@@ -6,45 +6,33 @@ interface ResponseInterface
 {
     /**
      * Get response's uri
-     *
-     * @return string
      */
     public function getUri() : string;
 
     /**
      * Get response's method
-     *
-     * @return string
      */
     public function getMethod() : string;
 
     /**
      * Get response's header by its name
-     *
-     * @param string $name
-     *
-     * @return mixed
      */
-    public function getHeader(string $name);
+    public function getHeader(string $name) : mixed;
 
     /**
      * Get all response's header
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getHeaders() : array;
 
     /**
      * Get response's body
-     *
-     * @return string
      */
     public function getBody() : string;
 
     /**
      * get response's status code
-     *
-     * @return int
      */
     public function getStatusCode() : int;
 }

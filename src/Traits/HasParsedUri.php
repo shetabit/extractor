@@ -7,11 +7,16 @@ trait HasParsedUri
     use HttpURL;
 
     /**
+     * Retrieve the uri that is parsed.
+     */
+    abstract public function getUri() : string;
+
+    /**
      * Parse uri
      *
-     * @return array
+     * @return array<string, int|string>
      */
-    public function getParsedUri()
+    public function getParsedUri() : array
     {
         return $this->parseURL($this->getUri());
     }
@@ -19,14 +24,12 @@ trait HasParsedUri
     /**
      * Parse query string
      *
-     * @return array
+     * @return array<array-key, mixed>
      */
-    public function getParsedQueryString()
+    public function getParsedQueryString() : array
     {
-        $parsedUri = $this->getParsedUri();
+        $queryString = $this->getParsedUri()['query'] ?? null;
 
-        $queryString = $parsedUri['query'] ?? null;
-
-        return $this->parseQueryString($queryString);
+        return $this->parseQueryString($queryString === null ? null : (string) $queryString);
     }
 }

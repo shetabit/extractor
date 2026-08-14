@@ -2,12 +2,14 @@
 
 namespace Shetabit\Extractor\Classes;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
+use RuntimeException;
 use Shetabit\Extractor\Contracts\RequestInterface;
 use Shetabit\Extractor\Contracts\ResponseInterface;
 use Shetabit\Extractor\Traits\Conditional;
-use Shetabit\Extractor\Traits\HasParsedUri;
-use GuzzleHttp\Client;
 use Shetabit\Extractor\Traits\HasMiddleware;
+use Shetabit\Extractor\Traits\HasParsedUri;
 
 class Request implements RequestInterface
 {
@@ -17,104 +19,88 @@ class Request implements RequestInterface
 
     /**
      * Request's EndPoint
-     *
-     * @var string
      */
-    protected $uri = '/';
+    protected string $uri = '/';
 
     /**
      * Request's method
-     *
-     * @var string
      */
-    protected $method = 'GET';
+    protected string $method = 'GET';
 
     /**
      * Request's custom headers
      *
-     * @var array
+     * @var array<string, string>
      */
-    protected $headers = [];
+    protected array $headers = [];
 
     /**
      * Used as request's body
-     *
-     * @var null
      */
-    protected $body = null;
+    protected mixed $body = null;
 
     /**
      * Used as request's multipart data
      *
-     * @var array
+     * @var array<int, array<string, mixed>>
      */
-    protected $multipartData = [];
+    protected array $multipartData = [];
 
     /**
      * Used to send request's params similar to forms
      *
-     * @var array
+     * @var array<string, mixed>
      */
-    protected $formParams= [];
+    protected array $formParams = [];
 
     /**
      * Request's query
      *
-     * @var array
+     * @var array<string, mixed>
      */
-    protected $queries = [];
+    protected array $queries = [];
 
     /**
      * Deadline of each request (seconds)
-     *
-     * @var float
      */
-    protected $timeout = 10.0; // 10 seconds
+    protected float $timeout = 10.0; // 10 seconds
 
     /**
      * Follow redirects or not
-     *
-     * @var bool
      */
-    protected $allowRedirects = true;
+    protected bool $allowRedirects = true;
 
     /**
      * Describes the SSL certificate verification behavior of a request.
-     *
-     * @var boolean|string
      */
-    protected $verify = true;
+    protected bool|string $verify = true;
 
     /**
      * String to specify an HTTP proxy, or an array to specify
      * different proxies for different protocols.
      *
-     * @var string|array
+     * @var array<string, string>|string|null
      */
-    protected $proxy = null;
+    protected array|string|null $proxy = null;
 
     /**
      * Success event callback
      *
-     * @var callable|null
+     * @var (callable(ResponseInterface, static): mixed)|null
      */
-    protected $onSuccessCallback = null;
+    protected $onSuccessCallback;
 
     /**
      * Error event callback
      *
-     * @var callable|null
+     * @var (callable(ResponseInterface, static): mixed)|null
      */
-    protected $onErrorCallback = null;
+    protected $onErrorCallback;
 
     /**
      * Request constructor.
-     *
-     * @param string $uri
-     * @param string $method
-     * @param string|null $body
      */
-    public function __construct(string $uri = '/', string $method = 'GET', string $body = null)
+    public function __construct(string $uri = '/', string $method = 'GET', mixed $body = null)
     {
         $this->setUri($uri);
         $this->setMethod($method);
@@ -123,42 +109,18 @@ class Request implements RequestInterface
 
     /**
      * Set request's uri (endpoint)
-     *
-     * @param string $url
-     *
-     * @return $this|mixed
      */
-    public function setUri(string $url)
+    public function setUri(string $url) : static
     {
         $this->uri = trim($url);
 
-        $this->addUriQueries($this->uri);
-
-        return $this;
-    }
-
-    /**
-     * Add uri's query string into query.
-     *
-     * @return $this|mixed
-    */
-    protected function addUriQueries($uri)
-    {
-        $queries = $this->getParsedQueryString($uri);
-
-        if (is_array($queries)) {
-            foreach ($queries as $name => $value) {
-                $this->addQuery($name, $value);
-            }
-        }
+        $this->addUriQueries();
 
         return $this;
     }
 
     /**
      * Get request's endpoint
-     *
-     * @return string
      */
     public function getUri() : string
     {
@@ -166,13 +128,9 @@ class Request implements RequestInterface
     }
 
     /**
-     * Get request's method (example: GET, POST, PUT, PATCH)
-     *
-     * @param string $method
-     *
-     * @return $this
+     * Set request's method (example: GET, POST, PUT, PATCH)
      */
-    public function setMethod(string $method)
+    public function setMethod(string $method) : static
     {
         $this->method = $method;
 
@@ -181,8 +139,6 @@ class Request implements RequestInterface
 
     /**
      * Get request's method
-     *
-     * @return string
      */
     public function getMethod() : string
     {
@@ -191,27 +147,18 @@ class Request implements RequestInterface
 
     /**
      * Add custom headers
-     *
-     * @param string $name
-     * @param string $value
-     *
-     * @return $this
      */
-    public function addHeader(string $name, string $value)
+    public function addHeader(string $name, string $value) : static
     {
-        $this->headers = array_merge($this->headers, [$name => $value]);
+        $this->headers[$name] = $value;
 
         return $this;
     }
 
     /**
      * Get header by its name
-     *
-     * @param string $name
-     *
-     * @return string
      */
-    public function getHeader(string $name) : string
+    public function getHeader(string $name) : string|null
     {
         return $this->headers[$name] ?? null;
     }
@@ -219,7 +166,7 @@ class Request implements RequestInterface
     /**
      * Retrieve all custom headers
      *
-     * @return array
+     * @return array<string, string>
      */
     public function getHeaders() : array
     {
@@ -228,12 +175,8 @@ class Request implements RequestInterface
 
     /**
      * Set request deadline (seconds)
-     *
-     * @param int $timeout
-     *
-     * @return $this
      */
-    public function setTimeout(int $timeout)
+    public function setTimeout(int $timeout) : static
     {
         $this->timeout = $timeout;
 
@@ -242,8 +185,6 @@ class Request implements RequestInterface
 
     /**
      * Get request's deadline (seconds)
-     *
-     * @return int
      */
     public function getTimeout() : int
     {
@@ -252,12 +193,8 @@ class Request implements RequestInterface
 
     /**
      * Follow redirects or not
-     *
-     * @param bool $allow
-     *
-     * @return $this|mixed
      */
-    public function allowRedirects(bool $allow = true)
+    public function allowRedirects(bool $allow = true) : static
     {
         $this->allowRedirects = $allow;
 
@@ -265,13 +202,17 @@ class Request implements RequestInterface
     }
 
     /**
-     * Set request's body
-     *
-     * @param $body
-     *
-     * @return $this|mixed
+     * Determine whether the redirects of a response are followed.
      */
-    public function setBody($body)
+    public function getAllowRedirects() : bool
+    {
+        return $this->allowRedirects;
+    }
+
+    /**
+     * Set request's body
+     */
+    public function setBody(mixed $body) : static
     {
         $this->body = $body;
 
@@ -280,38 +221,26 @@ class Request implements RequestInterface
 
     /**
      * Get request's body
-     *
-     * @return string|null
      */
-    public function getBody() : ?string
+    public function getBody() : string|null
     {
-        return $this->body;
+        return $this->body === null ? null : (string) $this->body;
     }
 
     /**
      * Add form data
-     *
-     * @param $name
-     * @param $value
-     *
-     * @return $this
      */
-    public function addFormParam($name, $value)
+    public function addFormParam(string $name, mixed $value) : static
     {
-        $this->formParams = array_merge($this->formParams, [$name => $value]);
+        $this->formParams[$name] = $value;
 
         return $this;
     }
 
     /**
-     * Retrieve multipart data
-     * if name is empty , all data will returned
-     *
-     * @param $name
-     *
-     * @return mixed|null
+     * Retrieve a single form param
      */
-    public function getFormParam($name)
+    public function getFormParam(string $name) : mixed
     {
         return $this->formParams[$name] ?? null;
     }
@@ -319,73 +248,66 @@ class Request implements RequestInterface
     /**
      * Retrieve all form params
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getFormParams()
+    public function getFormParams() : array
     {
         return $this->formParams;
     }
 
     /**
-     * Add form data
+     * Add multipart data
      *
-     * @param $name
-     * @param $value
-     * @param array $headers
-     *
-     * @return $this
+     * @param array<string, string> $headers
      */
-    public function addMultiparData($name, $value, array $headers = [])
+    public function addMultipartData(string $name, mixed $value, array $headers = []) : static
     {
-        $data = [
+        $this->multipartData[] = [
             'name' => $name,
             'contents' => $value,
-            'headers' => $headers
+            'headers' => $headers,
         ];
-
-        array_push($this->multipartData, $data);
 
         return $this;
     }
 
+    /**
+     * Add multipart data
+     *
+     * @param array<string, string> $headers
+     *
+     * @deprecated use `addMultipartData()`, this one carries a typo in its name
+     */
+    public function addMultiparData(string $name, mixed $value, array $headers = []) : static
+    {
+        return $this->addMultipartData($name, $value, $headers);
+    }
 
     /**
      * Retrieve multipart data
      * if name is empty , all data will returned
      *
-     * @param null $name
-     *
-     * @return array|mixed|null
+     * @return array<int, array<string, mixed>>|array<string, mixed>|null
      */
-    public function getMultipartData($name = null)
+    public function getMultipartData(int|string|null $name = null) : array|null
     {
-        return empty($name) ? $this->multipartData : ($this->multipartData[$name] ?? null);
+        return $name === null || $name === '' ? $this->multipartData : ($this->multipartData[$name] ?? null);
     }
 
     /**
      * Add query
-     *
-     * @param $name
-     * @param $value
-     *
-     * @return $this
      */
-    public function addQuery($name, $value)
+    public function addQuery(string $name, mixed $value) : static
     {
-        $this->queries = array_merge($this->queries, [$name => $value]);
+        $this->queries[$name] = $value;
 
         return $this;
     }
 
     /**
-     * Retrieve multipart data
-     * if name is empty , all data will returned
-     *
-     * @param $name
-     *
-     * @return mixed|null
+     * Retrieve a single query
      */
-    public function getQuery($name)
+    public function getQuery(string $name) : mixed
     {
         return $this->queries[$name] ?? null;
     }
@@ -393,9 +315,9 @@ class Request implements RequestInterface
     /**
      * Get request's queries
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getQueries()
+    public function getQueries() : array
     {
         return $this->queries;
     }
@@ -403,11 +325,9 @@ class Request implements RequestInterface
     /**
      * Set a proxy
      *
-     * @param mixed $proxy
-     *
-     * @return $this
+     * @param array<string, string>|string|null $proxy
      */
-    public function setProxy($proxy)
+    public function setProxy(array|string|null $proxy) : static
     {
         $this->proxy = $proxy;
 
@@ -415,23 +335,19 @@ class Request implements RequestInterface
     }
 
     /**
-    * Retrieve the current proxy
-    *
-    * @return mixed|null
-    */
-    public function getProxy()
+     * Retrieve the current proxy
+     *
+     * @return array<string, string>|string|null
+     */
+    public function getProxy() : array|string|null
     {
         return $this->proxy;
     }
 
     /**
      * Describes the SSL certificate verification behavior of a request.
-     *
-     * @param mixed $verify
-     *
-     * @return $this
      */
-    public function setVerify($verify)
+    public function setVerify(bool|string $verify) : static
     {
         $this->verify = $verify;
 
@@ -440,10 +356,8 @@ class Request implements RequestInterface
 
     /**
      * Retrieve SSL certificate verification behavior.
-     *
-     * @return bool|string
      */
-    public function getVerify()
+    public function getVerify() : bool|string
     {
         return $this->verify;
     }
@@ -451,12 +365,13 @@ class Request implements RequestInterface
     /**
      * Generate options
      *
-     * @return array
+     * @return array<string, mixed>
      */
-    public function getOptions()
+    public function getOptions() : array
     {
         $options = [
             'http_errors' => false,
+            'allow_redirects' => $this->getAllowRedirects(),
             'body' => $this->getBody(),
             'query' => $this->getQueries(),
             'headers' => $this->getHeaders(),
@@ -471,9 +386,9 @@ class Request implements RequestInterface
          * we can't use formParams and MultipartData at the same time.
          * this part selects one of them.
          */
-        if (!empty($this->getFormParams())) {
+        if ($this->getFormParams() !== []) {
             $options['form_params'] = $this->getFormParams();
-        } elseif (!empty($this->getMultipartData())) {
+        } elseif ($this->getMultipartData() !== []) {
             $options['multipart'] = $this->getMultipartData();
         }
 
@@ -483,11 +398,9 @@ class Request implements RequestInterface
     /**
      * This event will be invoked when fetch complete successfully.
      *
-     * @param callable $callback
-     *
-     * @return $this
+     * @param callable(ResponseInterface, static): mixed $callback
      */
-    public function onSuccess(callable $callback)
+    public function onSuccess(callable $callback) : static
     {
         $this->onSuccessCallback = $callback;
 
@@ -496,16 +409,11 @@ class Request implements RequestInterface
 
     /**
      * Trigger success event
-     *
-     * @param ResponseInterface $response
-     *
-     * @return $this
      */
-    public function success(ResponseInterface $response)
+    public function success(ResponseInterface $response) : static
     {
         if (is_callable($this->onSuccessCallback)) {
-            $success = $this->onSuccessCallback;
-            $success($response, $this);
+            ($this->onSuccessCallback)($response, $this);
         }
 
         return $this;
@@ -514,11 +422,9 @@ class Request implements RequestInterface
     /**
      * This event will be invoked when fetch fail.
      *
-     * @param callable $callback
-     *
-     * @return $this
+     * @param callable(ResponseInterface, static): mixed $callback
      */
-    public function onError(callable $callback)
+    public function onError(callable $callback) : static
     {
         $this->onErrorCallback = $callback;
 
@@ -527,16 +433,11 @@ class Request implements RequestInterface
 
     /**
      * Trigger error event
-     *
-     * @param ResponseInterface $response
-     *
-     * @return $this
      */
-    public function error(ResponseInterface $response)
+    public function error(ResponseInterface $response) : static
     {
         if (is_callable($this->onErrorCallback)) {
-            $error = $this->onErrorCallback;
-            $error($response, $this);
+            ($this->onErrorCallback)($response, $this);
         }
 
         return $this;
@@ -545,55 +446,34 @@ class Request implements RequestInterface
     /**
      * Run and fetch data
      *
-     * @param callable|null $resolve
-     * @param callable|null $reject
+     * @param (callable(ResponseInterface, static): mixed)|null $resolve
+     * @param (callable(ResponseInterface, static): mixed)|null $reject
      *
-     * @return ResponseInterface
-     *
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
-    public function fetch(callable $resolve = null, callable $reject = null) : ResponseInterface
+    public function fetch(callable|null $resolve = null, callable|null $reject = null) : ResponseInterface
     {
-        if (is_callable($resolve)) {
+        if ($resolve !== null) {
             $this->onSuccess($resolve);
         }
 
-        if (is_callable($reject)) {
+        if ($reject !== null) {
             $this->onError($reject);
         }
 
-        $next = function($request) {
-            $client = new Client([
-                // Base URI is used with relative requests
-                'base_uri' => $request->uri,
-    
-                // You can set any number of default request options.
-                'timeout'  => $request->getTimeout(),
-            ]);
+        $response = $this->invokeMiddlewares(
+            $this,
+            fn (RequestInterface $request): ResponseInterface => $this->sendRequest($request)
+        );
 
-            $result = $client->request($request->getMethod(), $request->getUri(), $request->getOptions());
+        if ($response === null) {
+            throw new RuntimeException('A middleware of this request answered with no response.');
+        }
 
-            $response = new Response(
-                $request->getMethod(),
-                $request->getUri(),
-                $result->getHeaders(),
-                $result->getBody(),
-                $result->getStatusCode()
-            );
-
-            return $response;
-        };
-
-        $response = $this->invokeMiddlewares($this, $next);
-
-        if ($response->getStatusCode() == 200) { // handle 200 OK response
-            if (is_callable($this->onSuccessCallback)) {
-                $this->success($response);
-            }
-        } else {
-            if (is_callable($this->onErrorCallback)) { // handle responses has error status
-                $this->error($response);
-            }
+        if ($response->getStatusCode() === 200) { // handle 200 OK response
+            $this->success($response);
+        } else { // handle responses has error status
+            $this->error($response);
         }
 
         return $response;
@@ -602,25 +482,68 @@ class Request implements RequestInterface
     /**
      * An alias for fetch
      *
-     * @param callable|null $resolve
-     * @param callable|null $reject
+     * @param (callable(ResponseInterface, static): mixed)|null $resolve
+     * @param (callable(ResponseInterface, static): mixed)|null $reject
      *
-     * @return ResponseInterface
-     *
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws GuzzleException
      */
-    public function send(callable $resolve = null, callable $reject = null)
+    public function send(callable|null $resolve = null, callable|null $reject = null) : ResponseInterface
     {
         return $this->fetch($resolve, $reject);
     }
 
     /**
      * Create concurrent requests (factory method).
-     *
-     * @return Bag
      */
-    public function createBag()
+    public function createBag() : Bag
     {
         return new Bag();
+    }
+
+    /**
+     * The client the request is sent with.
+     *
+     * A test — or an application that has to hand its own handler stack over —
+     * can replace it by extending this class.
+     */
+    protected function createClient() : Client
+    {
+        return new Client([
+            // Base URI is used with relative requests
+            'base_uri' => $this->getUri(),
+
+            // You can set any number of default request options.
+            'timeout' => $this->getTimeout(),
+        ]);
+    }
+
+    /**
+     * Add uri's query string into query.
+     */
+    protected function addUriQueries() : static
+    {
+        foreach ($this->getParsedQueryString() as $name => $value) {
+            $this->addQuery($name, $value);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Send the given request to its gateway.
+     *
+     * @throws GuzzleException
+     */
+    private function sendRequest(RequestInterface $request) : ResponseInterface
+    {
+        $result = $this->createClient()->request($request->getMethod(), $request->getUri(), $request->getOptions());
+
+        return new Response(
+            $request->getMethod(),
+            $request->getUri(),
+            $result->getHeaders(),
+            (string) $result->getBody(),
+            $result->getStatusCode()
+        );
     }
 }

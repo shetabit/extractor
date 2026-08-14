@@ -10,10 +10,8 @@ class ExtractorServiceProvider extends ServiceProvider
 {
     /**
      * Perform post-registration booting of services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot() : void
     {
         // load console commands
         $this->loadCommands();
@@ -21,26 +19,24 @@ class ExtractorServiceProvider extends ServiceProvider
 
     /**
      * Register any package services.
-     *
-     * @return void
      */
-    public function register()
+    public function register() : void
     {
         //
     }
 
     /**
      * Load artisan commands
-     *
-     * @return void
      */
-    protected function loadCommands()
+    protected function loadCommands() : void
     {
-        if ($this->app->runningInConsole()) {
-            $this->commands([
-                MicroClientMakeCommand::class,
-                MicroClientMiddlewareMakeCommand::class,
-            ]);
+        if (!$this->app->runningInConsole()) {
+            return;
         }
+
+        $this->commands([
+            MicroClientMakeCommand::class,
+            MicroClientMiddlewareMakeCommand::class,
+        ]);
     }
 }

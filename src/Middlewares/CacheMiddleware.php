@@ -11,29 +11,20 @@ use Shetabit\Extractor\Contracts\ResponseInterface;
 class CacheMiddleware extends MiddlewareAbstract
 {
     /**
-     * Time to live
-     */
-    protected $ttl;
-
-    /**
      * Cache constructor
      *
-     * @param int $ttl
+     * @param int $ttl time to live, in seconds
      */
-    public function __construct($ttl = 10)
+    public function __construct(protected int $ttl = 10)
     {
-        $this->ttl = $ttl;
     }
 
     /**
      * Handle request and return suitable response
      *
-     * @param RequestInterface $request
-     * @param Closure $next
-     *
-     * @return ResponseInterface
+     * @param Closure(RequestInterface): (ResponseInterface|null) $next
      */
-    public function handle(RequestInterface $request, Closure $next) : ?ResponseInterface
+    public function handle(RequestInterface $request, Closure $next) : ResponseInterface|null
     {
         $key = $this->getCacheKey($request);
 
@@ -46,10 +37,6 @@ class CacheMiddleware extends MiddlewareAbstract
 
     /**
      * Determine if cache exists
-     *
-     * @param string $key
-     *
-     * @return bool
      */
     protected function cacheExists(string $key) : bool
     {
@@ -58,27 +45,20 @@ class CacheMiddleware extends MiddlewareAbstract
 
     /**
      * Store response in cache
-     *
-     * @param string $key
-     * @param ResponseInterface $response
-     *
-     * @return ResponseInterface
      */
-    protected function storeInCache(string $key, ResponseInterface $response) : ?ResponseInterface
+    protected function storeInCache(string $key, ResponseInterface|null $response) : ResponseInterface|null
     {
-        Cache::put($key, $response, $this->ttl);
+        if ($response !== null) {
+            Cache::put($key, $response, $this->ttl);
+        }
 
         return $response;
     }
 
     /**
      * Retrieve response from cache
-     *
-     * @param string $key
-     *
-     * @return ResponseInterface
      */
-    protected function retrieveFromCache(string $key) : ?ResponseInterface
+    protected function retrieveFromCache(string $key) : ResponseInterface|null
     {
         return Cache::get($key);
     }
@@ -86,12 +66,15 @@ class CacheMiddleware extends MiddlewareAbstract
     /**
      * Create a unique key for given request
      *
-     * @param RequestInterface $request
-     *
-     * @return string
+     * The whole request used to be serialized for it, which throws as soon as
+     * the request carries an event callback: a closure can not be serialized.
      */
     protected function getCacheKey(RequestInterface $request) : string
     {
-        return sha1(serialize($request));
+        return sha1(implode('|', [
+            $request->getMethod(),
+            $request->getUri(),
+            serialize($request->getOptions()),
+        ]));
     }
 }

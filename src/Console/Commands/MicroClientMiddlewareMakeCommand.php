@@ -3,7 +3,9 @@
 namespace Shetabit\Extractor\Console\Commands;
 
 use Illuminate\Console\GeneratorCommand;
+use Symfony\Component\Console\Attribute\AsCommand;
 
+#[AsCommand(name: 'make:extractor-middleware')]
 class MicroClientMiddlewareMakeCommand extends GeneratorCommand
 {
     /**
@@ -30,21 +32,18 @@ class MicroClientMiddlewareMakeCommand extends GeneratorCommand
     /**
      * Get the stub file for the generator.
      *
-     * @return string
+     * The path used to be built with `base_path()`, which only ever pointed at
+     * the right file when the package sat in `vendor/shetabit/extractor`.
      */
-    protected function getStub()
+    protected function getStub() : string
     {
-        return base_path('vendor/shetabit/extractor/src/Console/stubs/middleware.stub');
+        return dirname(__DIR__).'/stubs/middleware.stub';
     }
 
     /**
      * Get the default namespace for the class.
-     *
-     * @param  string  $rootNamespace
-     *
-     * @return string
      */
-    protected function getDefaultNamespace($rootNamespace)
+    protected function getDefaultNamespace($rootNamespace) : string
     {
         return $rootNamespace.'\Http\RemoteRequests\Middlewares';
     }

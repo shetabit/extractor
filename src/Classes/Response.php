@@ -10,62 +10,21 @@ class Response implements ResponseInterface
     use HasParsedUri;
 
     /**
-     * Response's uri
-     *
-     * @var string
-     */
-    protected $uri;
-
-    /**
-     * Response's method
-     *
-     * @var string
-     */
-    protected $method;
-
-    /**
-     * Response's header
-     *
-     * @var array
-     */
-    protected $headers;
-
-    /**
-     * Response's body
-     *
-     * @var string
-     */
-    protected $body;
-
-    /**
-     * Response's status (http status code)
-     *
-     * @var int
-     */
-    protected $statusCode;
-
-    /**
      * Response constructor.
      *
-     * @param string $method
-     * @param string $uri
-     * @param array $headers
-     * @param string $body
-     * @param int $statusCode
+     * @param array<string, mixed> $headers
      */
-    public function __construct(string $method, string $uri, array $headers, string $body, int $statusCode)
-    {
-        $this->method= $method;
-        $this->uri = $uri;
-        $this->headers = $headers;
-        $this->body = $body;
-        $this->statusCode = $statusCode;
+    public function __construct(
+        protected readonly string $method,
+        protected readonly string $uri,
+        protected readonly array $headers,
+        protected readonly string $body,
+        protected readonly int $statusCode,
+    ) {
     }
 
     /**
      * Get response's uri
-     *
-     * @return string
      */
     public function getUri() : string
     {
@@ -74,8 +33,6 @@ class Response implements ResponseInterface
 
     /**
      * Get response's method
-     *
-     * @return string
      */
     public function getMethod() : string
     {
@@ -84,11 +41,8 @@ class Response implements ResponseInterface
 
     /**
      * Get response's header by its name
-     *
-     * @param string $name
-     * @return mixed|string|null
      */
-    public function getHeader(string $name)
+    public function getHeader(string $name) : mixed
     {
         return $this->headers[$name] ?? null;
     }
@@ -96,7 +50,7 @@ class Response implements ResponseInterface
     /**
      * Get all response's header
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function getHeaders() : array
     {
@@ -105,8 +59,6 @@ class Response implements ResponseInterface
 
     /**
      * Get response's body
-     *
-     * @return string
      */
     public function getBody() : string
     {
@@ -115,8 +67,6 @@ class Response implements ResponseInterface
 
     /**
      * get response's status code
-     *
-     * @return int
      */
     public function getStatusCode() : int
     {

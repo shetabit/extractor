@@ -2,11 +2,10 @@
 
 namespace Shetabit\Extractor\Traits;
 
-use Closure;
 use Shetabit\Extractor\Contracts\MiddlewareInterface;
+use Shetabit\Extractor\Contracts\RequestInterface;
 use Shetabit\Extractor\Contracts\ResponseInterface;
 use Shetabit\Extractor\Middlewares\CacheMiddleware;
-use Shetabit\Extractor\Middlewares\Middleware;
 
 trait HasMiddleware
 {
@@ -14,50 +13,52 @@ trait HasMiddleware
      * Global middlewares
      * this middlewares that will be binded into all requests
      *
-     * @var array
+     * @var array<int, MiddlewareInterface>
      */
-    public static $globalMiddlewares = [];
+    public static array $globalMiddlewares = [];
 
     /**
      * A list of middlewares that's not expected to run
      *
-     * @var array
+     * @var array<int, MiddlewareInterface>
      */
-    public $bannedMiddlewares = [];
+    public array $bannedMiddlewares = [];
 
     /**
      * Middlewares
      *
-     * @var array
+     * @var array<int, MiddlewareInterface>
      */
-    protected $middlewares = [];
+    protected array $middlewares = [];
 
     /**
      * Add global middlewares
      *
-     * @param array $middlewares
-     *
-     * @return void
+     * @param array<int, MiddlewareInterface|class-string<MiddlewareInterface>> $middlewares
      */
-    public static function withGlobalMiddlewares(array $middlewares)
+    public static function withGlobalMiddlewares(array $middlewares) : void
     {
-        foreach($middlewares as $middleware) {
-            $middlewareInstance = ($middleware instanceof MiddlewareInterface) ? $middleware : new $middleware;
-
-            array_push(static::$globalMiddlewares, $middlewareInstance);
+        foreach ($middlewares as $middleware) {
+            static::$globalMiddlewares[] = $middleware instanceof MiddlewareInterface
+                ? $middleware
+                : new $middleware();
         }
     }
 
     /**
-     * Add a middleware that's not expected to run
-     *
-     * @param MiddlewareInterface $middleware
-     *
-     * @return $this
+     * Throw the global middlewares away.
      */
-    public function withoutMiddleware(MiddlewareInterface $middleware)
+    public static function withoutGlobalMiddlewares() : void
     {
-        array_push($this->bannedMiddlewares, $middleware);
+        static::$globalMiddlewares = [];
+    }
+
+    /**
+     * Add a middleware that's not expected to run
+     */
+    public function withoutMiddleware(MiddlewareInterface $middleware) : static
+    {
+        $this->bannedMiddlewares[] = $middleware;
 
         return $this;
     }
@@ -65,53 +66,54 @@ trait HasMiddleware
     /**
      * Bind cache middleware
      *
-     * @param $ttl
-     *
-     * @return $this
+     * @param int $ttl time to live, in seconds
      */
-    public function cache($ttl = 10)
+    public function cache(int $ttl = 10) : static
     {
-        $this->middleware(new CacheMiddleware($ttl));
+        return $this->middleware(new CacheMiddleware($ttl));
+    }
+
+    /**
+     * Add middlewares
+     */
+    public function middleware(MiddlewareInterface $middleware) : static
+    {
+        $this->middlewares[] = $middleware;
 
         return $this;
     }
 
     /**
-     * Add middlewares
+     * The middlewares that run for this request, the global ones first.
      *
-     * @param MiddlewareInterface $middleware
-     *
-     * @return $this
+     * @return array<int, MiddlewareInterface>
      */
-    public function middleware(MiddlewareInterface $middleware)
+    public function getMiddlewares() : array
     {
-        array_push($this->middlewares, $middleware);
+        $middlewares = array_merge(static::$globalMiddlewares, $this->middlewares);
 
-        return $this;
+        return array_values(array_filter(
+            $middlewares,
+            /**
+             * A banned middleware is recognized by what it is, not by being the
+             * very same object: `withoutMiddleware(new SomeMiddleware())` bans
+             * the middleware of that class with those settings.
+             */
+            fn (MiddlewareInterface $middleware): bool => !in_array($middleware, $this->bannedMiddlewares, false)
+        ));
     }
 
     /**
      * Retrieve a chain of middlewares
      *
-     * @return null|ResponseInterface
+     * @param callable(RequestInterface): (ResponseInterface|null) $callback
      */
-    protected function invokeMiddlewares($request, $callback)  : ?ResponseInterface
+    protected function invokeMiddlewares(RequestInterface $request, callable $callback) : ResponseInterface|null
     {
-        $middlewares = array_diff(
-            array_merge(static::$globalMiddlewares, $this->middlewares),
-            $this->bannedMiddlewares
-        );
+        $next = fn (RequestInterface $request): ResponseInterface|null => $callback($request);
 
-        $middlewares = array_reverse($middlewares);
-
-        $next = function ($request) use ($callback) {
-            return $callback($request);
-        };
-
-        foreach ($middlewares as $middleware) {
-            $next = function ($request) use ($middleware, $next) {
-                return $middleware->handle($request, $next);
-            };
+        foreach (array_reverse($this->getMiddlewares()) as $middleware) {
+            $next = fn (RequestInterface $request): ResponseInterface|null => $middleware->handle($request, $next);
         }
 
         return $next($request);

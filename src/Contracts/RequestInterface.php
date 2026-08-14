@@ -6,111 +6,102 @@ interface RequestInterface
 {
     /**
      * Set request's URI
-     *
-     * @param string $url
-     *
-     * @return mixed
      */
-    public function setUri(string $url);
+    public function setUri(string $url) : static;
 
     /**
      * Get request's URI
-     *
-     * @return string
      */
     public function getUri() : string;
 
     /**
      * Set request's method (exp: GET, POST, PUT, DELETE, ...)
-     *
-     * @param string $method
-     *
-     * @return mixed
      */
-    public function setMethod(string $method);
+    public function setMethod(string $method) : static;
 
     /**
      * Get request's method
-     *
-     * @return string
      */
     public function getMethod() : string;
 
     /**
      * Add a header to request
-     *
-     * @param string $name
-     * @param string $value
-     *
-     * @return mixed
      */
-    public function addHeader(string $name, string $value);
+    public function addHeader(string $name, string $value) : static;
 
     /**
      * Get header by its name
-     *
-     * @param string $name
-     *
-     * @return string
      */
-    public function getHeader(string $name) : string;
+    public function getHeader(string $name) : string|null;
 
     /**
      * Get request's headers
      *
-     * @return array
+     * @return array<string, string>
      */
     public function getHeaders() : array;
 
     /**
      * Set Request's deadline (seconds)
-     *
-     * @param int $timeout
-     *
-     * @return mixed
      */
-    public function setTimeout(int $timeout);
+    public function setTimeout(int $timeout) : static;
 
     /**
      * Get request's timeout
-     *
-     * @return int
      */
     public function getTimeout() : int;
 
-
     /**
      * Follow redirects or not
-     *
-     * @param $allow
-     *
-     * @return mixed
      */
-    public function allowRedirects(bool $allow = true);
+    public function allowRedirects(bool $allow = true) : static;
 
     /**
      * Set request's body
-     *
-     * @param $body
-     *
-     * @return mixed
      */
-    public function setBody($body); // set request's body
+    public function setBody(mixed $body) : static;
 
     /**
      * Get request's body
-     *
-     * @return string|null
      */
-    public function getBody() : ?string; // get request's body
+    public function getBody() : string|null;
+
+    /**
+     * The options the request is sent with
+     *
+     * @return array<string, mixed>
+     */
+    public function getOptions() : array;
+
+    /**
+     * Register the callback that runs after a request succeeded
+     *
+     * @param callable(ResponseInterface, static): mixed $callback
+     */
+    public function onSuccess(callable $callback) : static;
+
+    /**
+     * Register the callback that runs after a request failed
+     *
+     * @param callable(ResponseInterface, static): mixed $callback
+     */
+    public function onError(callable $callback) : static;
+
+    /**
+     * Trigger the success event of the request
+     */
+    public function success(ResponseInterface $response) : static;
+
+    /**
+     * Trigger the error event of the request
+     */
+    public function error(ResponseInterface $response) : static;
 
     /**
      * Run request and fetch data
      *
-     * @param callable|null $resolve
-     * @param callable|null $reject
-     *
-     * @return ResponseInterface
+     * @param (callable(ResponseInterface, static): mixed)|null $resolve
+     * @param (callable(ResponseInterface, static): mixed)|null $reject
      */
-    public function fetch(callable $resolve = null, callable $reject = null) : ResponseInterface;
+    public function fetch(callable|null $resolve = null, callable|null $reject = null) : ResponseInterface;
 }
